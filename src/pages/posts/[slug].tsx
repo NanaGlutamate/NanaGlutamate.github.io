@@ -2,39 +2,39 @@ import * as fs from "fs/promises"
 import * as notion from "@/lib/renderNotion"
 import { ExtendedRecordMap } from 'notion-types'
 import type {
-  InferGetStaticPropsType,
-  GetStaticProps,
-  GetStaticPaths,
+    InferGetStaticPropsType,
+    GetStaticProps,
+    GetStaticPaths,
 } from 'next'
 
 const slugContentMap = new Map<string, string>()
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const rawFilePath = await fs.readdir("./raw/posts", { recursive: true })
-  return {
-    paths: [
-      {
-        params: {
-          slug: 'test-page',
-          id: '13b67c975f5a80dd8c0ad745cf34f8a1'
-        },
-      },
-    ],
-    fallback: 'blocking'
-  }
+    const rawFilePath = await fs.readdir("./raw/posts", { recursive: true })
+    return {
+        paths: [
+            {
+                params: {
+                    slug: 'test-page',
+                    id: '13b67c975f5a80dd8c0ad745cf34f8a1'
+                },
+            },
+        ],
+        fallback: 'blocking'
+    }
 }
 
 export const getStaticProps: GetStaticProps<
-  { rm: ExtendedRecordMap },
-  { slug: string, id: string }
+    { rm: ExtendedRecordMap },
+    { slug: string, id: string }
 > = async ({ params }) => {
-  return { props: { rm: await notion.getRecordMap('13b67c975f5a80dd8c0ad745cf34f8a1') } }
+    return { props: { rm: await notion.getRecordMap('13b67c975f5a80dd8c0ad745cf34f8a1') } }
 }
 
 export default function Page({
-  rm
+    rm
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  return notion.renderNotionPage(rm)
+    return notion.renderNotionPage(rm)
 }
 
 // import * as fs from "fs/promises"
