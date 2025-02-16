@@ -6,114 +6,140 @@ import type {
     GetStaticProps,
     GetStaticPaths,
 } from 'next'
+import {
+    FileInfo,
+    HeaderInfo,
+    NotionPageInfo,
+    MDXPageInfo,
+    isMDX,
+} from '@/lib/pagetype'
+import { MDXRemote } from 'next-mdx-remote'
+import { serialize } from 'next-mdx-remote/serialize'
+import type { CompileMDXResult, MDXRemoteSerializeResult } from 'next-mdx-remote/rsc'
+import { PageHeader } from '@/lib/view/PageHeader'
+import { JSXElementConstructor, ReactElement } from "react"
 
-const slugContentMap = new Map<string, string>()
+const postDir = "./raw/posts/"
+
+const assert = (expr: boolean) => {
+    if (!expr) {
+        throw new Error('assertion failed')
+    }
+}
+
+const processNotion = async (path: string[], content: string): Promise<NotionPageInfo> => {
+    const info = JSON.parse(content) as HeaderInfo & { notionId: string }
+    return {
+        ...info,
+        slug: path[path.length - 1],
+        dir: path.slice(0, path.length - 1),
+        type: "notion",
+    }
+}
+
+const processMDX = async (path: string[], content: string): Promise<MDXPageInfo> => {
+    return {
+        slug: path[path.length - 1],
+        dir: path.slice(0, path.length - 1),
+        type: "mdx",
+        source: content,
+    }
+}
+
+/**
+ * load file to slugContentMap, and then returns slug of file
+ * @param relativePath path from /raw to target file
+ * @returns [slug of file, content]
+ */
+const loadFile = async (
+    relativePath: string
+): Promise<NotionPageInfo | MDXPageInfo> => {
+    const path = relativePath.split('/').flatMap((s) => s.split('\\'))
+
+    const filePath = postDir + relativePath
+    const fileName = path[path.length - 1]
+    const fileType = fileName.slice(fileName.lastIndexOf('.') + 1)
+    
+    const fileContent = (await fs.readFile(filePath, { encoding: 'utf-8' })).toString()
+
+    if (fileType == 'mdx' || fileType == 'md') {
+        return await processMDX(path, fileContent)
+    } else if (fileType == 'json') {
+        return await processNotion(path, fileContent)
+    } else {
+        throw new Error(`unknown type of file: ${fileName}`)
+    }
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
-    const rawFilePath = await fs.readdir("./raw/posts", { recursive: true })
+    const slugs = (await fs.readdir(postDir, { recursive: true }))
+            // file only, filter out dirs
+            .filter((value) => value.includes('.'))
+            // get slug and file path
+            .map((value) => {
+                const path = value.split('/').flatMap((s) => s.split('\\'))
+                const fileName = path[path.length - 1]
+                return {
+                    params: {
+                        slug: fileName.slice(0, fileName.lastIndexOf('.'))
+                    }
+                }
+            })
     return {
-        paths: [
-            {
-                params: {
-                    slug: 'test-page',
-                    id: '13b67c975f5a80dd8c0ad745cf34f8a1'
-                },
-            },
-        ],
-        fallback: 'blocking'
+        paths: slugs,
+        fallback: false
+    }
+}
+
+const getHeaderFromFrontMatter = (fileInfo: FileInfo, frontmatter: Record<string, unknown>): HeaderInfo & FileInfo => {
+    const date = frontmatter.date ? frontmatter.date as string : ""
+    return {
+        ...fileInfo,
+        title: frontmatter.title ? frontmatter.title as string : "",
+        date: date,
+        lastUpdate: (frontmatter.lastUpdate ? frontmatter.lastUpdate : date) as string,
+        desc: frontmatter.desc ? frontmatter.desc as string : "",
+        tags: frontmatter.tags ? (frontmatter.tags as string).split(',') : [],
+        state: frontmatter.state ? frontmatter.state as ("初始" | "草稿" | "归档" | "搁置" | "定稿" | "过期") : "归档",
     }
 }
 
 export const getStaticProps: GetStaticProps<
-    { rm: ExtendedRecordMap },
-    { slug: string, id: string }
+    { info: HeaderInfo & FileInfo } & ({ rm: ExtendedRecordMap } | { mdx: MDXRemoteSerializeResult }),
+    { slug: string }
 > = async ({ params }) => {
-    return { props: { rm: await notion.getRecordMap('13b67c975f5a80dd8c0ad745cf34f8a1') } }
+    if (typeof params == 'undefined') {
+        throw new Error('no param')
+    }
+
+    const filePaths = (await fs.readdir(postDir, { recursive: true }))
+            .filter((v) => v.includes(params.slug))
+    assert(filePaths.length == 1)
+    
+    const pageInfo = await loadFile(filePaths[0])
+    if (isMDX(pageInfo)) {
+        const compiled = await serialize(pageInfo.source, { parseFrontmatter: true })
+        return {
+            props: {
+                mdx: compiled,
+                info: getHeaderFromFrontMatter(pageInfo, compiled.frontmatter),
+            }
+        }
+    }
+    return {
+        props: {
+            rm: await notion.getRecordMap(pageInfo.notionId),
+            info: pageInfo
+        }
+    }
+    // rm: await notion.getRecordMap('13b67c975f5a80dd8c0ad745cf34f8a1')
 }
 
-export default function Page({
-    rm
-}: InferGetStaticPropsType<typeof getStaticProps>) {
-    return notion.renderNotionPage(rm)
+export default function Page(data: InferGetStaticPropsType<typeof getStaticProps>) {
+    return (
+        <>
+            <PageHeader info={ data.info } />
+            { ('rm' in data) ? notion.renderNotionPage(data.rm) : <MDXRemote { ...data.mdx }/> }
+        </>
+    )
 }
-
-// import * as fs from "fs/promises"
-// import * as notion from "@/lib/renderNotion"
-// import { ExtendedRecordMap } from 'notion-types'
-// import * as React from 'react'
-// import { NotionAPI } from 'notion-client'
-// import { Notion } from '@/lib/notionComponent'
-
-// // function Blog({ res, id }: { res: string, id: string }) {
-// //   // Render posts...
-// //   return <h1 className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">{res}, {id}</h1>
-// // }
-
-// // export async function getStaticPaths() {
-// //   const rawFilePath = await fs.readdir("./raw/posts", { recursive: true })
-// //   return {
-// //     paths: [
-// //       { params: { title: '1' } },
-// //       { params: { title: '2' } },
-// //       { params: { title: '3' } },
-// //     ],
-// //     fallback: false,
-// //   }
-// // }
-
-// // export async function getStaticProps({ params }: { params: { title: string } }) {
-// //   const res = await fs.readFile("./raw/posts.json", { encoding: 'utf-8' })
-// //   return {
-// //     props: {
-// //       res: res,
-// //       id: params.title,
-// //     }
-// //   }
-// // }
-// export const dynamicParams = false
-
-// export async function generateStaticParams() {
-//   const rm = await notion.getRecordMap("13b67c975f5a80dd8c0ad745cf34f8a1")
-//   return [
-//     {
-//       slug: 'test1',
-//       rm: rm
-//     }
-//   ]
-// }
-
-// export default async function Page({
-//   params
-// }: {
-//   params: Promise<{
-//     slug: string,
-//     rm: ExtendedRecordMap
-//   }>
-// }) {
-//   const value = await params
-//   console.log(value)
-//   return <Notion rm={value.rm}/>
-//   // const value = await params
-//   // const [open, setOpen] = React.useState(false)
-//   // return (
-//   //   <div>
-//   //     {/* <h1 onClick={() => setOpen(!open)}>114514 {open}</h1> */}
-//   //     {/* <NotionRenderer
-//   //       recordMap={value.rm}
-//   //       components={{
-//   //         nextImage: Image,
-//   //         nextLink: Link,
-//   //         Code,
-//   //         Collection,
-//   //         Equation,
-//   //         Modal,
-//   //         Pdf,
-//   //       }}
-//   //       fullPage={false}
-//   //     /> */}
-//   //     {/* {
-//   //       render.renderNotionPage(value.rm)
-//   //     } */}
-//   //   </div>
-//   // )
-// }
