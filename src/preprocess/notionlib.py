@@ -40,6 +40,7 @@ config = dict()
 for line in vars:
     k, v = line.split('=')
     config[k.strip()] = v.strip()
+print(list(config.keys()))
 notion = Client(auth=config['NOTION_TOKEN'])
 
 def clip_block(block: dict):
