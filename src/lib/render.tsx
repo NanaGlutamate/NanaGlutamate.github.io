@@ -5,12 +5,12 @@ import 'katex/dist/katex.min.css'
 import '@/styles/notion.css'
 
 import * as React from 'react'
-import type { MetaData, Page, PageNodeRoot } from "@/lib/pagetype"
-import Link from 'next/link'
-import Image from 'next/image'
+import type { MetaData, Page, PageNodeRoot, PageNodeAny } from "@/lib/pagetype"
+// import Link from 'next/link'
+// import Image from 'next/image'
 
 // 渲染块级内容的组件
-const BlockContent: React.FC<{ block: any }> = ({ block }) => {
+const BlockContent: React.FC<{ block: PageNodeAny }> = ({ block }) => {
     const { type } = block
 
     switch (type) {
@@ -26,11 +26,11 @@ export const PageRoot: React.FC<{ metaData: MetaData, pageInfo: Page, root: Page
             <article className="page sans">
                 <header>
                     <h1 className="page-title">{pageInfo.Title}</h1>
-                    <p className="page-description"></p>
+                    <p className="page-description">{JSON.stringify(metaData)}</p>
                 </header>
                 <div className="page-body">
-                    {root._children?.map((block) => (
-                        <BlockContent block={block} />
+                    {root._children?.map((block, i) => (
+                        <BlockContent key={i} block={block} />
                     ))}
                 </div>
             </article>

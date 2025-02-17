@@ -7,11 +7,11 @@ import type {
 } from 'next'
 import { PageRoot } from "@/lib/render"
 
-const assert = (expr: boolean) => {
-    if (!expr) {
-        throw new Error('assertion failed')
-    }
-}
+// const assert = (expr: boolean) => {
+//     if (!expr) {
+//         throw new Error('assertion failed')
+//     }
+// }
 
 export const getStaticPaths: GetStaticPaths = async () => {
     const metaData: MetaData = JSON.parse(await fs.readFile('./.notion_out/__meta_data__.json', 'utf-8'))

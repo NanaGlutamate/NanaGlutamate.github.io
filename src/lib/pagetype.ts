@@ -1,38 +1,37 @@
-export interface PageNode<T extends string> {
+export interface PageNode<T extends string, Y> {
     type: T,
-    T: any,
+    T: Y,
     id: string,
     _children?: PageNodeAny[],
 }
 
-export type PageNodeRoot = PageNode<'child_page'>
+export type PageNodeRoot = PageNode<'child_page', { title: string }>
 
 export type PageNodeAny =
-        PageNode<'child_page'>
-        | PageNode<'bulleted_list_item'>
-        | PageNode<'callout'>
-        | PageNode<'child_page'>
-        | PageNode<'code'>
-        | PageNode<'column'>
-        | PageNode<'column_list'>
-        | PageNode<'divider'>
-        | PageNode<'emoji'>
-        | PageNode<'equation'>
-        | PageNode<'file'>
-        | PageNode<'heading_1'>
-        | PageNode<'heading_2'>
-        | PageNode<'heading_3'>
-        | PageNode<'image'>
-        | PageNode<'link_to_page'>
-        | PageNode<'mention'>
-        | PageNode<'numbered_list_item'>
-        | PageNode<'page'>
-        | PageNode<'page_id'>
-        | PageNode<'paragraph'>
-        | PageNode<'table'>
-        | PageNode<'table_of_contents'>
-        | PageNode<'table_row'>
-        | PageNode<'text'>
+        PageNode<'child_page', { title: string }>
+        | PageNode<'bulleted_list_item', { rich_text: RichText[], color: string }>
+        | PageNode<'callout', { rich_text: RichText[], icon: { type: string, emoji: string }, color: string }>
+        | PageNode<'code', { rich_text: RichText[], language: string, caption: RichText[] }>
+        | PageNode<'column', object>
+        | PageNode<'column_list', object>
+        | PageNode<'divider', object>
+        | PageNode<'emoji', { emoji: string }>
+        | PageNode<'equation', { expression: string }>
+        | PageNode<'file', { type: string, file: { url: string, expiry_time: string } }>
+        | PageNode<'heading_1', { rich_text: RichText[], color: string, is_toggleable: boolean }>
+        | PageNode<'heading_2', { rich_text: RichText[], color: string, is_toggleable: boolean }>
+        | PageNode<'heading_3', { rich_text: RichText[], color: string, is_toggleable: boolean }>
+        | PageNode<'image', { type: string, file: { url: string, expiry_time: string }, caption: RichText[] }>
+        | PageNode<'link_to_page', { type: string, page_id: string }>
+        | PageNode<'mention', { type: string, page: { id: string } }>
+        | PageNode<'numbered_list_item', { rich_text: RichText[], color: string }>
+        | PageNode<'page', { title: string }>
+        | PageNode<'page_id', { title: string }>
+        | PageNode<'paragraph', { rich_text: RichText[], color: string }>
+        | PageNode<'table', { table_width: number, has_column_header: boolean, has_row_header: boolean }>
+        | PageNode<'table_of_contents', { color: string }>
+        | PageNode<'table_row', { cells: RichText[][] }>
+        | PageNode<'text', { content: string, link: { url: string } | null }>
 
 export type MetaData = {
     slug_to_id: { [key: string]: string },
@@ -46,4 +45,41 @@ export interface Page {
     Date?: string,
     Status?: string,
     Page?: string,
+}
+
+export type RichText = 
+    (RichTextTextContent | RichTextMentionContent | RichTextEquationContent) & {
+        annotations: {
+            bold: boolean;
+            italic: boolean;
+            strikethrough: boolean;
+            underline: boolean;
+            code: boolean;
+            color: string;
+        };
+        plain_text: string;
+        href: string | null;
+    }
+
+export type RichTextTextContent = {
+    type: 'text',
+    text: {
+        content: string;
+        link: { url: string } | null;
+    };
+}
+
+export type RichTextMentionContent = {
+    type: 'mention',
+    mention: {
+        type: string;
+        page: { id: string };
+    };
+}
+
+export type RichTextEquationContent = {
+    type: 'equation',
+    equation: {
+        expression: string;
+    };
 }
