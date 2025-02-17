@@ -2,6 +2,7 @@ from notion_client import Client
 from functools import cache
 import os
 import json
+import sys
 
 class PageCache:
     def __init__(self):
@@ -26,12 +27,19 @@ class PageCache:
         with open(f'.notion_cache/{key}.json', 'w') as f:
             json.dump(self.cache[key], f, indent=4)
 
-# 从.env.local文件直接读取NOTION_TOKEN
+# 从.env.local文件或命令行参数读取NOTION_TOKEN
+vars = []
+if len(sys.argv) > 1:
+    vars = sys.argv[1:]
+else:
+    with open('.env.local', 'r') as f:
+        for line in f:
+            vars.append(line.strip())
+
 config = dict()
-with open('.env.local', 'r') as f:
-    for line in f:
-        k, v = line.strip().split('=')
-        config[k] = v
+for line in vars:
+    k, v = line.split('=')
+    config[k.strip()] = v.strip()
 notion = Client(auth=config['NOTION_TOKEN'])
 
 def clip_block(block: dict):
