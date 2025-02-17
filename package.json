@@ -8,12 +8,10 @@
         "lint": "next lint"
     },
     "dependencies": {
-        "@notionhq/client": "^2.2.15",
         "next": "14.2.15",
-        "notion-client": "^7.0.1",
         "react": "^18",
         "react-dom": "^18",
-        "react-notion-x": "^7.0.1",
+        "react-katex": "^3.0.0",
         "remark": "^15.0.1",
         "remark-gfm": "^4.0.0",
         "remark-html": "^16.0.1"
