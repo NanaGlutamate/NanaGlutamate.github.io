@@ -50,4 +50,4 @@ with open(f'.notion_out/__meta_data__.json', 'w', encoding='utf-8') as f:
 
 for p in pages:
     with open(f'.notion_out/{id_to_slug[p["id"]]}.json', 'w', encoding='utf-8') as f:
-        json.dump({ 'content': p, **id_to_data[p['id']] }, f, indent=4, ensure_ascii=False)
+        json.dump(p, f, indent=4, ensure_ascii=False)

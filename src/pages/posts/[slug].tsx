@@ -30,19 +30,14 @@ export const getStaticProps: GetStaticProps<
     }
     const metaData: MetaData = JSON.parse(await fs.readFile('./.notion_out/__meta_data__.json', 'utf-8'))
     const { slug } = params
-    const id = metaData.slug_to_id[slug]
-    if (typeof id == 'undefined') {
-        throw new Error('no id')
-    }
-    const pageInfo = metaData.id_to_data[id]
-    if (typeof pageInfo == 'undefined') {
-        throw new Error('no page info')
-    }
+    const id = metaData.slug_to_id[slug] ?? (() => { throw new Error('no id') })()
+    const pageInfo = metaData.id_to_data[id] ?? (() => { throw new Error('no page info') })()
+    const root = JSON.parse(await fs.readFile(`./.notion_out/${slug}.json`, 'utf-8')) as PageNodeRoot
     return {
         props: {
             metaData,
             pageInfo,
-            root: JSON.parse(await fs.readFile(`./.notion_out/${slug}.json`, 'utf-8')) as PageNodeRoot,
+            root
         }
     }
 }
