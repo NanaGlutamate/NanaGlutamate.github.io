@@ -39,8 +39,10 @@ else:
 config = dict()
 for line in vars:
     k, v = line.split('=')
-    config[k.strip()] = v.strip()
-print(list(config.keys()))
+    k, v = k.strip(), v.strip()
+    if v == '':
+        raise ValueError(f'invalid env: {k}')
+    config[k] = v
 notion = Client(auth=config['NOTION_TOKEN'])
 
 def clip_block(block: dict):

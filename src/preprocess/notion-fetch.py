@@ -4,6 +4,7 @@ from notionlib import *
 from render import *
 
 # 获取所有页面
+print(config['ROOT_PAGE_ID'])
 data = list(map(lambda x:x['properties'], get_database(config['ROOT_PAGE_ID'])))
 for row in data:
     row['Tag'] = list(map(lambda x:x['name'], row['Tag']['multi_select']))
