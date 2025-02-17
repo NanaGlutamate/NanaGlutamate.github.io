@@ -1,5 +1,5 @@
-// used for code syntax highlighting (optional)
-import 'prismjs/themes/prism-tomorrow.css'
+// // used for code syntax highlighting (optional)
+// import 'prismjs/themes/prism-tomorrow.css'
 // used for rendering equations (optional)
 import 'katex/dist/katex.min.css'
 import '@/styles/notion.css'
