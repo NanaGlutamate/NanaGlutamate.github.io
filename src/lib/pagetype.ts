@@ -1,34 +1,49 @@
-export interface FileInfo {
-    slug: string,
-    dir: Array<string>,
-    type: "notion" | "mdx",
+export interface PageNode<T extends string> {
+    type: T,
+    T: any,
+    id: string,
+    _children?: PageNodeAny[],
 }
 
-export interface HeaderInfo {
-    title: string,
-    date: string,
-    lastUpdate?: string,
-    desc?: string,
-    tags: Array<string>,
-    state: "初始" | "草稿" | "归档" | "搁置" | "定稿" | "过期",
+export type PageNodeRoot = PageNode<'child_page'>
+
+export type PageNodeAny =
+        PageNode<'child_page'>
+        | PageNode<'bulleted_list_item'>
+        | PageNode<'callout'>
+        | PageNode<'child_page'>
+        | PageNode<'code'>
+        | PageNode<'column'>
+        | PageNode<'column_list'>
+        | PageNode<'divider'>
+        | PageNode<'emoji'>
+        | PageNode<'equation'>
+        | PageNode<'file'>
+        | PageNode<'heading_1'>
+        | PageNode<'heading_2'>
+        | PageNode<'heading_3'>
+        | PageNode<'image'>
+        | PageNode<'link_to_page'>
+        | PageNode<'mention'>
+        | PageNode<'numbered_list_item'>
+        | PageNode<'page'>
+        | PageNode<'page_id'>
+        | PageNode<'paragraph'>
+        | PageNode<'table'>
+        | PageNode<'table_of_contents'>
+        | PageNode<'table_row'>
+        | PageNode<'text'>
+
+export type MetaData = {
+    slug_to_id: { [key: string]: string },
+    id_to_data: { [key: string]: Page },
 }
 
-export interface NotionPageInfo extends FileInfo, HeaderInfo {
-    type: "notion",
-
-    notionId: string,
-}
-
-export interface MDXPageInfo extends FileInfo {
-    type: "mdx",
-
-    source: string,
-}
-
-export function isNotion(info: FileInfo): info is NotionPageInfo {
-    return info.type == "notion";
-}
-
-export function isMDX(info: FileInfo): info is MDXPageInfo {
-    return info.type == "mdx";
+export interface Page {
+    Slug: string,
+    Title: string,
+    Tag?: string[],
+    Date?: string,
+    Status?: string,
+    Page?: string,
 }

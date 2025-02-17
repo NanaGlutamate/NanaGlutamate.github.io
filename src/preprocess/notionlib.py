@@ -42,6 +42,10 @@ def clip_block(block: dict):
     if 'in_trash' in block: del block['in_trash']
     if 'parent' in block: del block['parent']
     if 'object' in block: del block['object']
+    if 'has_children' in block:
+        if block['has_children']:
+            block['_children'] = []
+        del block['has_children']
 
 # cached notion APIs
 @cache
@@ -103,8 +107,7 @@ class TreeCache:
             return False
         else:
             # cache miss
-            for k in self.id_to_node[id, pg_id]:
-                del self.id_to_node[id, pg_id][k]
+            self.id_to_node[id, pg_id].clear()
             for k, v in new_value.items():
                 self.id_to_node[id, pg_id][k] = v
                 
@@ -120,8 +123,7 @@ class TreeCache:
             return True
 
         # update children if cache miss or insert new node
-        if new_value['has_children']:
-            new_value['_children'] = []
+        if '_children' in new_value:
             for i in get_block_children(new_value['id']):
                 child_id = i['id']
                 self.flush_node_if_need(child_id, pg_id, i)

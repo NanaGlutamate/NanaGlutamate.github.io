@@ -132,3 +132,4 @@ dist
 .notion_cache
 .notion_log
 **/__pycache__
+.notion_out

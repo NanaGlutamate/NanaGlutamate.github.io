@@ -15,6 +15,7 @@ for row in data:
     for i in row['Page']['title']:
         if i['type'] == 'mention':
             row['Page'] = i['mention']['page']['id']
+            row['Title'] = i['plain_text']
             break
     else:
         row['Page'] = None
@@ -30,15 +31,23 @@ for row in data:
         sub_page = get_page_nodes(row['Page'])
         for p in sub_page:
             id_to_slug[p['id']] = p['id']
-            id_to_data[p['id']] = dict()
+            id_to_data[p['id']] = { 'Slug': p['id'], 'Title': p['child_page']['title'] }
             pages.append(p)
         id_to_slug[row['Page']] = row['Slug']
         id_to_data[row['Page']] = row
 
-if not os.path.exists('.notion_log'):
-    os.makedirs('.notion_log')
+if not os.path.exists('.notion_out'):
+    os.makedirs('.notion_out')
 
-with open('.notion_log/database.json', 'w') as f:
-    json.dump(data, f, indent=4)
-with open('.notion_log/pages.json', 'w') as f:
-    json.dump([{ 'content': p, **id_to_data[p['id']] } for p in pages], f, indent=4)
+with open(f'.notion_out/__meta_data__.json', 'w', encoding='utf-8') as f:
+    slug_to_id = { v: k for k, v in id_to_slug.items() }
+    if len(slug_to_id) != len(id_to_slug):
+        raise ValueError('duplicate slug')
+    json.dump({
+        'slug_to_id': slug_to_id,
+        'id_to_data': id_to_data
+    }, f, indent=4, ensure_ascii=False)
+
+for p in pages:
+    with open(f'.notion_out/{id_to_slug[p["id"]]}.json', 'w', encoding='utf-8') as f:
+        json.dump({ 'content': p, **id_to_data[p['id']] }, f, indent=4, ensure_ascii=False)
