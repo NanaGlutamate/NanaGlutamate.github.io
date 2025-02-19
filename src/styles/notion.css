@@ -287,6 +287,10 @@ ul > li {
 	list-style: disc;
 }
 
+ol > li {
+	list-style-type: decimal;
+}
+
 ul {
 	padding-inline-start: 1.7em;
 }
