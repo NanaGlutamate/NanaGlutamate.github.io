@@ -43,6 +43,7 @@ jobs:
         run: |
           pip3 install notion_client
           pip3 install requests
+          pip3 install pillow
           python3 src/preprocess/notion-fetch.py NOTION_TOKEN=${{ secrets.NOTION_TOKEN }} ROOT_PAGE_ID=${{ vars.ROOT_PAGE_ID }}
       - name: Detect package manager
         id: detect-package-manager

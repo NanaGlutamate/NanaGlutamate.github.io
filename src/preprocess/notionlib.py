@@ -9,8 +9,7 @@ class PageCache:
     def __init__(self):
         self.cache = dict()
         # 加载磁盘缓存
-        if not os.path.exists('.notion_cache'):
-            os.makedirs('.notion_cache')
+        os.makedirs('.notion_cache', exist_ok=True)
         for cache_file in os.listdir('.notion_cache'):
             if not cache_file.endswith('.json'):
                 continue

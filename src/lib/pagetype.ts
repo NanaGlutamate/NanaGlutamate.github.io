@@ -1,4 +1,5 @@
-export type PageNode<T> = T extends { [K in keyof T]: infer Y } ? {
+// eslint-disable-next-line
+export type PageNode<T> = T extends { [K in keyof T]: infer _ } ? {
     type: keyof T,
     id: string,
     _children?: PageNodeAny[],
@@ -49,6 +50,7 @@ export type PageNodeAny = PageNodeRoot
 export type MetaData = {
     slug_to_id: { [key: string]: string },
     id_to_data: { [key: string]: Page },
+    img_to_wh: { [key: string]: { width: number, height: number } },
 }
 
 export interface Page {
