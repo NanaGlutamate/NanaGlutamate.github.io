@@ -133,3 +133,4 @@ dist
 .notion_log
 **/__pycache__
 .notion_out
+public/collected

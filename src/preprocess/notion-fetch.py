@@ -1,5 +1,6 @@
 import json
 import os
+from PIL import Image
 from notionlib import *
 
 # 获取所有页面
@@ -24,6 +25,7 @@ for row in data:
 pages = []
 id_to_data = dict()
 id_to_slug = dict()
+img_to_wh = dict()
 
 for row in data:
     if row['Page'] and row['Status'] == '发布':
@@ -41,20 +43,25 @@ def dfs(node: dict):
     if type == 'image' or type == 'file':
         file_name = node[type]['file']['url']
         # copy to src/public/collected
-        os.makedirs('src/public/collected', exist_ok=True)
-        with open(f'src/public/collected/{file_name}', 'wb') as f:
-            with open(f'.notion_cache/{file_name}', 'rb') as f2:
-                f.write(f2.read())
+        os.makedirs('public/collected', exist_ok=True)
+        if type == 'file':
+            with open(f'public/collected/{file_name}', 'wb') as f:
+                with open(f'.notion_cache/{file_name}', 'rb') as f2:
+                    f.write(f2.read())
+        else:
+            img = Image.open(f'.notion_cache/{file_name}')
+            img.save(f'public/collected/{file_name}')
+            img_to_wh[file_name] = { "width": img.width, "height": img.height }
 
     if '_children' in node:
         for i in node['_children']:
             dfs(i)
+            
 for p in pages:
     dfs(p)
 
 # write outputs
-if not os.path.exists('.notion_out'):
-    os.makedirs('.notion_out')
+os.makedirs('.notion_out', exist_ok=True)
 
 with open(f'.notion_out/__meta_data__.json', 'w', encoding='utf-8') as f:
     slug_to_id = { v: k for k, v in id_to_slug.items() }
@@ -62,7 +69,8 @@ with open(f'.notion_out/__meta_data__.json', 'w', encoding='utf-8') as f:
         raise ValueError('duplicate slug')
     json.dump({
         'slug_to_id': slug_to_id,
-        'id_to_data': id_to_data
+        'id_to_data': id_to_data,
+        'img_to_wh': img_to_wh,
     }, f, indent=4, ensure_ascii=False)
 
 for p in pages:

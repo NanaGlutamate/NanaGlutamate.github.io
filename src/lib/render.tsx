@@ -1,9 +1,9 @@
-// import 'prismjs/themes/prism-tomorrow.css'
 import 'katex/dist/katex.min.css'
 import '@/styles/notion.css'
 
 import * as React from 'react'
 import * as PageType from "@/lib/pagetype"
+import { CodeBlock } from '@/lib/components/CodeBlock'
 import Link from 'next/link'
 import Image from 'next/image'
 import katex from 'katex'
@@ -72,17 +72,14 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
     ['divider', () => <hr />],
     
     // PageNodeTableOfContents
-    ['table_of_contents', () => <nav className="table_of_contents" />],
+    ['table_of_contents', () => <div />],
     
     // PageNodeCallout
-    ['callout', ({ block, metaData, index }) => {
+    ['callout', ({ block, metaData }) => {
         // TODO: 第一个 callout 视为旁注
         const b = block as PageType.PageNodeCallout
         return (
             <figure className={`block-color-${b.callout.color} callout`} style={{ whiteSpace: 'pre-wrap', display: 'flex' }}>
-                <div style={{ fontSize: '1.5em' }}>
-                    <span className="icon">{b.callout.icon.emoji}</span>
-                </div>
                 <div style={{ width: '100%' }}>
                     <p>
                         <RichTextArray texts={b.callout.rich_text} metaData={metaData} />
@@ -93,21 +90,11 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
     }],
     
     // PageNodeCode
-    ['code', ({ block }) => {
-        const b = block as PageType.PageNodeCode
-        return (
-            <pre className={`code language-${b.code.language.toLowerCase()}`}>
-                <code className={`language-${b.code.language.toLowerCase()}`}>
-                    {b.code.rich_text.map(t => t.plain_text).join('')}
-                </code>
-            </pre>
-        )
-    }],
+    ['code', ({ block }) => <CodeBlock block={block} />],
     
     // PageNodeColumn
-    ['column', ({ block, metaData }) => {
-        const b = block as PageType.PageNodeColumn
-        return <div className="column">{b._children?.map((c, i) => <BlockContent key={i} block={c} metaData={metaData} />)}</div>
+    ['column', () => {
+        throw new Error('column should always be a child of column_list')
     }],
     
     // PageNodeColumnList
@@ -115,17 +102,26 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
         const b = block as PageType.PageNodeColumnList
         return (
             <div className="column-list">
-                {b._children?.map((column, i) => (
-                    <div key={i} className="column" style={{ width: `${100 / (b._children?.length || 1)}%` }}>
-                        <BlockContent block={column} metaData={metaData} index={i} />
-                    </div>
-                ))}
+                {b._children?.map((column, i) => {
+                    if (column.type !== 'column') {
+                        throw new Error('column should always be a child of column_list')
+                    }
+                    const b = column as PageType.PageNodeColumn
+                    return (
+                        <div className="column" key={i}>
+                            {b._children?.map((c, i) => <BlockContent key={i} block={c} metaData={metaData} />)}
+                        </div>
+                    )
+                })}
             </div>
         )
     }],
     
     // PageNodeTable
     ['table', ({ block, metaData }) => {
+        if (block.type !== 'table') {
+            throw new Error('table should always be a child of table_row')
+        }
         const b = block as PageType.PageNodeTable
         return (
             <table className="simple-table">
@@ -182,7 +178,10 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
         const b = block as PageType.PageNodeImage
         return (
             <figure className="image">
-                <Image src={`/collected/${b.image.file.url}`} width={100} height={100} alt={b.image.caption.map(c => c.plain_text).join('')} />
+                <Image src={`/collected/${b.image.file.url}`}
+                    width={metaData.img_to_wh[b.image.file.url].width}
+                    height={metaData.img_to_wh[b.image.file.url].height}
+                    alt={b.image.caption.map(c => c.plain_text).join('')} />
                 {b.image.caption.length > 0 && (
                     <figcaption>
                         <RichTextArray texts={b.image.caption} metaData={metaData} />
@@ -195,21 +194,19 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
     // PageNodeFile
     ['file', ({ block }) => {
         const b = block as PageType.PageNodeFile
-        return <a href={`/collected/${b.file.file.url}`} className="file-link">📎 下载文件</a>
+        const fileName = b.file.file.url.split('_', 2)[1]
+        return (
+            <a href={`/collected/${b.file.file.url}`} className="file-link">
+                <figure className="file">
+                    <p>附件：{fileName}</p>
+                </figure>
+            </a>
+        )
     }],
     
     // PageNodeTableRow
-    ['table_row', ({ block, metaData }) => {
-        const b = block as PageType.PageNodeTableRow
-        return (
-            <tr>
-                {b.table_row.cells.map((cell, i) => (
-                    <td key={i}>
-                        <RichTextArray texts={cell} metaData={metaData} />
-                    </td>
-                ))}
-            </tr>
-        )
+    ['table_row', () => {
+        throw new Error('table_row should always be a child of table')
     }],
 ]);
 
@@ -237,7 +234,7 @@ const RichTextContent: React.FC<{ text: PageType.RichText, metaData: PageType.Me
 
     // 应用文本样式
     if (text.annotations.code) {
-        content = <code>{content}</code>
+        content = <code className="inline">{content}</code>
     }
     if (text.annotations.bold) {
         content = <strong>{content}</strong>
@@ -269,8 +266,8 @@ const RichTextArray: React.FC<{ texts: PageType.RichText[], metaData: PageType.M
 
 // 渲染块级内容的组件
 const BlockContent: React.FC<{ block: PageType.PageNodeAny, metaData: PageType.MetaData, index?: number }> = ({ block, metaData, index }) => {
-    const renderer = rendererForBlock.get(block.type)
-    const content = renderer ? renderer({ block, metaData, index }) : <p>{JSON.stringify(block)}</p>
+    const renderer = rendererForBlock.get(block.type) ?? (() => <p>{JSON.stringify(block)}</p>)
+    const content = renderer({ block, metaData, index }) as React.ReactNode
 
     // 如果有子节点且当前块不是特殊处理子节点的类型（如 column_list、table 等）
     if (block._children && !['column_list', 'table'].includes(block.type)) {
@@ -289,6 +286,10 @@ const BlockContent: React.FC<{ block: PageType.PageNodeAny, metaData: PageType.M
     return content
 }
 
+const PageDescription: React.FC<{ pageData: PageType.Page }> = ({ pageData }) => {
+    return <p className="page-description">{JSON.stringify(pageData)}</p>
+}
+
 // 主页面渲染组件
 export const PageRoot: React.FC<{ metaData: PageType.MetaData, pageInfo: PageType.Page, root: PageType.PageNodeRoot }> =
     ({ metaData, pageInfo, root }) => {
@@ -296,7 +297,7 @@ export const PageRoot: React.FC<{ metaData: PageType.MetaData, pageInfo: PageTyp
             <article className="page sans">
                 <header>
                     <h1 className="page-title">{pageInfo.Title}</h1>
-                    <p className="page-description">{JSON.stringify(metaData)}</p>
+                    <PageDescription pageData={metaData.id_to_data[root.id]} />
                 </header>
                 <div className="page-body">
                     {root._children?.map((block, i) => (
