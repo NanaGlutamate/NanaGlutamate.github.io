@@ -3,6 +3,7 @@ from functools import cache
 import os
 import json
 import sys
+import requests
 
 class PageCache:
     def __init__(self):
@@ -124,14 +125,30 @@ class TreeCache:
                 
         # mark dirty
         if pg_id not in self.modified_pg_to_id:
-            self.modified_pg_to_id[pg_id] = [id]
-        else:
-            self.modified_pg_to_id[pg_id].append(id)
+            self.modified_pg_to_id[pg_id] = []
+        self.modified_pg_to_id[pg_id].append(id)
         
         new_value = self.id_to_node[id, pg_id]
         # leaf sub-page, return
         if new_value['type'] == 'child_page' and new_value['id'] != pg_id:
+            del new_value['_children']
             return True
+        
+        # fetch img and file
+        if new_value['type'] == 'image' or new_value['type'] == 'file':
+            type = new_value['type']
+            url = new_value[type]['file']['url']
+            del new_value[type]['file']['expiry_time']
+
+            if type == 'image':
+                origin_file_name = url.split('/')[-1].split('?')[0]
+                file_name = f'{new_value["id"]}.{origin_file_name.split(".")[-1]}'
+            else:
+                file_name = f'{new_value["id"]}_{new_value["file"]["name"]}'
+            new_value[type]['file']['url'] = file_name
+            # download url to file_name
+            with open('.notion_cache/' + file_name, 'wb') as f:
+                f.write(requests.get(url).content)
 
         # update children if cache miss or insert new node
         if '_children' in new_value:

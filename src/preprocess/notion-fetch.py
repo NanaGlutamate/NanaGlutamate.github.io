@@ -1,7 +1,6 @@
 import json
 import os
 from notionlib import *
-from render import *
 
 # 获取所有页面
 data = list(map(lambda x:x['properties'], get_database(config['ROOT_PAGE_ID'])))
@@ -11,7 +10,7 @@ for row in data:
     if row['Date']:
         row['Date'] = row['Date']['start']
     row['Status'] = row['Status']['status']['name']
-    row['Slug'] = flattern_rich_test(row['Slug']['rich_text'])
+    row['Slug'] = "".join(piece['plain_text'] for piece in row['Slug']['rich_text'])
     for i in row['Page']['title']:
         if i['type'] == 'mention':
             row['Page'] = i['mention']['page']['id']
@@ -36,6 +35,24 @@ for row in data:
         id_to_slug[row['Page']] = row['Slug']
         id_to_data[row['Page']] = row
 
+# copy fetched files
+def dfs(node: dict):
+    type = node['type']
+    if type == 'image' or type == 'file':
+        file_name = node[type]['file']['url']
+        # copy to src/public/collected
+        os.makedirs('src/public/collected', exist_ok=True)
+        with open(f'src/public/collected/{file_name}', 'wb') as f:
+            with open(f'.notion_cache/{file_name}', 'rb') as f2:
+                f.write(f2.read())
+
+    if '_children' in node:
+        for i in node['_children']:
+            dfs(i)
+for p in pages:
+    dfs(p)
+
+# write outputs
 if not os.path.exists('.notion_out'):
     os.makedirs('.notion_out')
 
