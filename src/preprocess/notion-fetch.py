@@ -12,6 +12,7 @@ for row in data:
         row['Date'] = row['Date']['start']
     row['Status'] = row['Status']['status']['name']
     row['Slug'] = "".join(piece['plain_text'] for piece in row['Slug']['rich_text'])
+    row['Summary'] = "".join(piece['plain_text'] for piece in row['Summary']['rich_text'])
     for i in row['Page']['title']:
         if i['type'] == 'mention':
             row['Page'] = i['mention']['page']['id']
@@ -56,7 +57,7 @@ def dfs(node: dict):
     if '_children' in node:
         for i in node['_children']:
             dfs(i)
-            
+
 for p in pages:
     dfs(p)
 

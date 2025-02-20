@@ -4,6 +4,7 @@ import '@/styles/notion.css'
 import * as React from 'react'
 import * as PageType from "@/lib/pagetype"
 import { CodeBlock } from '@/lib/components/CodeBlock'
+import { BlockLink } from '@/lib/components/BlockLink'
 import Link from 'next/link'
 import Image from 'next/image'
 import katex from 'katex'
@@ -21,11 +22,10 @@ const rendererForBlock = new Map<
     // PageNodeRoot 是子节点时当做 link_to_page 处理
     ['child_page', ({ block, metaData }) => {
         const b = block as PageType.PageNodeRoot
-        return <figure className="link-to-page">
-            <Link href={`/posts/${metaData.id_to_data[b.id].Slug}`} className="mention">
-                {metaData.id_to_data[b.id].Title}
-            </Link>
-        </figure>
+        const pageData = metaData.id_to_data[b.id]
+        const url = pageData ? `/posts/${pageData.Slug}` : "/";
+        const desc = pageData ? `📓 ${pageData.Title}` : "[未发布页面]"
+        return <BlockLink url={url} desc={desc} />
     }],
     
     // PageNodeParagraph
@@ -84,7 +84,6 @@ const rendererForBlock = new Map<
     
     // PageNodeCallout
     ['callout', ({ block, metaData }) => {
-        // TODO: 第一个 callout 视为旁注
         const b = block as PageType.PageNodeCallout
         return (
             <figure className={`block-color-${b.callout.color} callout`} style={{ whiteSpace: 'pre-wrap', display: 'flex' }}>
@@ -92,6 +91,11 @@ const rendererForBlock = new Map<
                     <p>
                         <RichTextArray texts={b.callout.rich_text} metaData={metaData} />
                     </p>
+                    {b._children ? (
+                        <div className="indented">
+                            <BlockContentList blocks={b._children} metaData={metaData}/>
+                        </div>
+                    ) : ""}
                 </div>
             </figure>
         )
@@ -108,6 +112,7 @@ const rendererForBlock = new Map<
     // PageNodeColumnList
     ['column_list', ({ block, metaData }) => {
         const b = block as PageType.PageNodeColumnList
+        const width = 100 / (b._children?.length ?? 1)
         return (
             <div className="column-list">
                 {b._children?.map((column, i) => {
@@ -116,7 +121,7 @@ const rendererForBlock = new Map<
                     }
                     const b = column as PageType.PageNodeColumn
                     return (
-                        <div className="column" key={i}>
+                        <div className="column" key={i} style={{ width: `${width}%` }}>
                             {b._children ? <BlockContentList blocks={b._children} metaData={metaData}/> : ""}
                         </div>
                     )
@@ -152,19 +157,9 @@ const rendererForBlock = new Map<
     ['link_to_page', ({ block, metaData }) => {
         const b = block as PageType.PageNodeLinkToPage
         const pageData = metaData.id_to_data[b.link_to_page.page_id]
-        if (!pageData) {
-            return <figure className="link-to-page">
-                <Link href="/">
-                    <em className="highlight-gray">{"[未发布页面]"}</em>
-                </Link>
-            </figure>
-        }
-        return <figure className="link-to-page">
-            <Link href={`/posts/${metaData.id_to_data[b.link_to_page.page_id].Slug}`} className="link-to-page">
-                <span className="icon">📓</span>
-                {metaData.id_to_data[b.link_to_page.page_id].Title}
-            </Link>
-        </figure>
+        const url = pageData ? `/posts/${pageData.Slug}` : "/";
+        const desc = pageData ? pageData.Title : "未发布页面"
+        return <BlockLink url={url} desc={desc} />
     }],
     
     // PageNodeEmoji
@@ -203,18 +198,18 @@ const rendererForBlock = new Map<
     ['file', ({ block }) => {
         const b = block as PageType.PageNodeFile
         const fileName = b.file.file.url.split('_', 2)[1]
-        return (
-            <a href={`/collected/${b.file.file.url}`} className="file-link">
-                <figure className="file">
-                    <p>附件：{fileName}</p>
-                </figure>
-            </a>
-        )
+        return <BlockLink url={`/collected/${b.file.file.url}`} desc={`🔗 ${fileName}`} />
     }],
     
     // PageNodeTableRow
     ['table_row', () => {
         throw new Error('table_row should always be a child of table')
+    }],
+
+    // PageNodeQuote
+    ['quote', ({ block, metaData }) => {
+        const b = block as PageType.PageNodeQuote
+        return <blockquote><RichTextArray texts={b.quote.rich_text} metaData={metaData} /></blockquote>
     }],
 ]);
 
@@ -282,8 +277,21 @@ const BlockContent: React.FC<{
     const renderer = rendererForBlock.get(block.type) ?? (() => <p>{JSON.stringify(block)}</p>)
     const content = renderer({ block, metaData, index, groupIndex }) as React.ReactNode
 
-    // 如果有子节点且当前块不是特殊处理子节点的类型（如 column_list、table 等）
-    if (block._children && !['column_list', 'table'].includes(block.type)) {
+    // 如果有子节点且当前块不是特殊处理子节点的类型
+    if (block._children && !['column_list', 'table', 'callout'].includes(block.type)) {
+        const firstChild = block._children.at(0)
+        if (firstChild && firstChild.type === 'callout') {
+            block._children.shift()
+            return (
+                <div className="side-comment-holder">
+                    {content}
+                    <BlockContent block={firstChild} metaData={metaData} index={0} groupIndex={0} />
+                    <div className="indented">
+                        <BlockContentList blocks={block._children} metaData={metaData} />
+                    </div>
+                </div>
+            )
+        }
         return (
             <>
                 {content}

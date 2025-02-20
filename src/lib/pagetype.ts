@@ -25,6 +25,7 @@ export type PageNodeEquation = PageNode<{ 'equation': { expression: string } }>;
 export type PageNodeImage = PageNode<{ 'image': { file: { url: string }, caption: RichText[] } }>;
 export type PageNodeFile = PageNode<{ 'file': { file: { url: string } } }>;
 export type PageNodeTableRow = PageNode<{ 'table_row': { cells: RichText[][] } }>;
+export type PageNodeQuote = PageNode<{ 'quote': { rich_text: RichText[] } }>;
 
 export type PageNodeAny = PageNodeRoot
     | PageNodeParagraph
@@ -46,6 +47,7 @@ export type PageNodeAny = PageNodeRoot
     | PageNodeImage
     | PageNodeFile
     | PageNodeTableRow
+    | PageNodeQuote
 
 export type MetaData = {
     slug_to_id: { [key: string]: string },
@@ -60,6 +62,7 @@ export interface Page {
     Date?: string,
     Status?: string,
     Page?: string,
+    Summary?: string,
 }
 
 export type RichText = 

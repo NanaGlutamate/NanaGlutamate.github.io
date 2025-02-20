@@ -8,7 +8,7 @@
     --fg-color: rgb(55, 53, 47);
     --fg-color-icon: rgba(55, 53, 47, 0.09);
 
-    --bg-color: #fff;
+    --bg-color: rgb(255, 255, 255);
 
     --select-color-0: rgb(46, 170, 220);
     --select-color-1: rgba(45, 170, 219, 0.3);
@@ -76,8 +76,6 @@
     --notion-item-bullet-default: rgb(91, 151, 189);
     --notion-item-bullet-purple: rgb(167, 130, 195);
     --notion-item-bullet-gray: rgb(145, 145, 142);
-
-    --notion-max-width: 720px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -117,6 +115,10 @@
 	}
 }
 
+:root {
+    --notion-max-width: 720px;
+}
+
 .sans { font-family: var(--notion-font); }
 .code { font-family: var(--notion-font-code); }
 
@@ -130,14 +132,18 @@ html {
 	print-color-adjust: exact;
 }
 
+body {
+	border: 1px solid var(--fg-color-icon);
+}
+
 html,
 body {
 	margin: 0;
-	padding: 0;
+	padding: 0 10px 0;
 }
 @media only screen {
 	body {
-		margin: 2em auto;
+		margin: 0 auto;
 		max-width: var(--notion-max-width);
 	}
 }
@@ -200,11 +206,59 @@ figure.callout {
 	background-color: var(--notion-gray_background_co);
 }
 
-figure.file {
+blockquote {
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid var(--fg-color-icon);
+}
+
+div.side-comment-holder {
+	position: relative;
+}
+
+div.side-comment-holder > figure.callout {
+	margin: -0.5em 0;
+	padding: 0;
+	background-color: transparent;
+	position: absolute;
+	top: 0;
+	left: 105%;
+	width: 25%;
+}
+
+/* div.aside-comment {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+}
+
+div.aside-comment > div.content {
+	flex-shrink: 0;
+	flex-grow: 1;
+}
+
+div.aside-comment > figure.callout {
+	margin-right: -30%;
+	margin-left: 10%;
+	margin-top: 0;
+	margin-bottom: 0;
+	width: 20%;
+	flex-shrink: 0;
+	flex-grow: 0;
+} */
+
+figure.block-link {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
 	border: 1px solid var(--fg-color-icon);
 	border-radius: 3px;
 	padding: 1rem;
 	background-color: transparent;
+}
+
+figure.block-link > p {
+	text-decoration: none;
 }
 
 mark {
@@ -319,13 +373,6 @@ ol > li {
 .simple-table td {
 	height: 29px;
 	min-width: 120px;
-}
-
-.link-to-page {
-	margin: 1em 0;
-	padding: 0;
-	border: none;
-	font-weight: 500;
 }
 
 p {
