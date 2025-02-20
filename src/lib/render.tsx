@@ -287,7 +287,9 @@ const BlockContent: React.FC<{
         return (
             <>
                 {content}
-                <BlockContentList blocks={block._children} metaData={metaData} />
+                <div className="indented">
+                    <BlockContentList blocks={block._children} metaData={metaData} />
+                </div>
             </>
         )
     }
