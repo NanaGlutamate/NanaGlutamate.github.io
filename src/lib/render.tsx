@@ -9,7 +9,15 @@ import Image from 'next/image'
 import katex from 'katex'
 
 // 为每种块级内容定义专门的渲染组件类型
-const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny, metaData: PageType.MetaData, index?: number }>>([
+const rendererForBlock = new Map<
+    string,
+    React.FC<{ 
+        block: PageType.PageNodeAny,
+        metaData: PageType.MetaData, 
+        index: number,
+        groupIndex: number
+    }
+>>([
     // PageNodeRoot 是子节点时当做 link_to_page 处理
     ['child_page', ({ block, metaData }) => {
         const b = block as PageType.PageNodeRoot
@@ -57,10 +65,10 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
     }],
     
     // PageNodeNumberedListItem
-    ['numbered_list_item', ({ block, metaData, index }) => {
+    ['numbered_list_item', ({ block, metaData, groupIndex }) => {
         const b = block as PageType.PageNodeNumberedListItem
         return (
-            <ol type="1" className="numbered-list" start={index}>
+            <ol type="1" className="numbered-list" start={groupIndex + 1}>
                 <li>
                     <RichTextArray texts={b.numbered_list_item.rich_text} metaData={metaData} />
                 </li>
@@ -109,7 +117,7 @@ const rendererForBlock = new Map<string, React.FC<{ block: PageType.PageNodeAny,
                     const b = column as PageType.PageNodeColumn
                     return (
                         <div className="column" key={i}>
-                            {b._children?.map((c, i) => <BlockContent key={i} block={c} metaData={metaData} />)}
+                            {b._children?.map((c, i) => < key={i} block={c} metaData={metaData} />)}
                         </div>
                     )
                 })}
@@ -265,19 +273,35 @@ const RichTextArray: React.FC<{ texts: PageType.RichText[], metaData: PageType.M
 }
 
 // 渲染块级内容的组件
-const BlockContent: React.FC<{ block: PageType.PageNodeAny, metaData: PageType.MetaData, index?: number }> = ({ block, metaData, index }) => {
+const BlockContent: React.FC<{
+    block: PageType.PageNodeAny,
+    metaData: PageType.MetaData,
+    index: number,
+    groupIndex: number
+}> = ({ block, metaData, index }) => {
     const renderer = rendererForBlock.get(block.type) ?? (() => <p>{JSON.stringify(block)}</p>)
-    const content = renderer({ block, metaData, index }) as React.ReactNode
+    const content = renderer({ block, metaData, index, groupIndex }) as React.ReactNode
 
     // 如果有子节点且当前块不是特殊处理子节点的类型（如 column_list、table 等）
     if (block._children && !['column_list', 'table'].includes(block.type)) {
+        const groupedChildren = block._children.reduce((groupedChildren, child) => {
+            const lastType = groupedChildren[groupedChildren.length - 1]
+            if (lastType === child.type) {
+                groupedChildren[groupedChildren.length - 1].push(child)
+            } else {
+                groupedChildren.push([child])
+            }
+        }, [])
         return (
             <>
                 {content}
                 <div className="indented">
-                    {block._children.map((child, i) => (
-                        <BlockContent key={i} block={child} metaData={metaData} index={i} />
-                    ))}
+                    {groupedChildren.flatMap((group, i) => {
+                        const preLength = groupedChildren.slice(0, i).reduce((ans, i) => ans + i, 0)
+                        return group.map((child, j) => (
+                            <BlockContent key={preLength + j} block={child} metaData={metaData} index={preLength + j} groupIndex={j} />
+                        ))
+                     })}
                 </div>
             </>
         )
@@ -301,7 +325,7 @@ export const PageRoot: React.FC<{ metaData: PageType.MetaData, pageInfo: PageTyp
                 </header>
                 <div className="page-body">
                     {root._children?.map((block, i) => (
-                        <BlockContent key={i} block={block} metaData={metaData} index={i} />
+                        < key={i} block={block} metaData={metaData} index={i} />
                     ))}
                 </div>
             </article>
