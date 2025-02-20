@@ -117,7 +117,7 @@ const rendererForBlock = new Map<
                     const b = column as PageType.PageNodeColumn
                     return (
                         <div className="column" key={i}>
-                            {b._children?.map((c, i) => < key={i} block={c} metaData={metaData} />)}
+                            {b._children ? <BlockContentList blocks={b._children} metaData={metaData}/> : ""}
                         </div>
                     )
                 })}
@@ -278,36 +278,47 @@ const BlockContent: React.FC<{
     metaData: PageType.MetaData,
     index: number,
     groupIndex: number
-}> = ({ block, metaData, index }) => {
+}> = ({ block, metaData, index, groupIndex }) => {
     const renderer = rendererForBlock.get(block.type) ?? (() => <p>{JSON.stringify(block)}</p>)
     const content = renderer({ block, metaData, index, groupIndex }) as React.ReactNode
 
     // 如果有子节点且当前块不是特殊处理子节点的类型（如 column_list、table 等）
     if (block._children && !['column_list', 'table'].includes(block.type)) {
-        const groupedChildren = block._children.reduce((groupedChildren, child) => {
-            const lastType = groupedChildren[groupedChildren.length - 1]
-            if (lastType === child.type) {
-                groupedChildren[groupedChildren.length - 1].push(child)
-            } else {
-                groupedChildren.push([child])
-            }
-        }, [])
         return (
             <>
                 {content}
-                <div className="indented">
-                    {groupedChildren.flatMap((group, i) => {
-                        const preLength = groupedChildren.slice(0, i).reduce((ans, i) => ans + i, 0)
-                        return group.map((child, j) => (
-                            <BlockContent key={preLength + j} block={child} metaData={metaData} index={preLength + j} groupIndex={j} />
-                        ))
-                     })}
-                </div>
+                <BlockContentList blocks={block._children} metaData={metaData} />
             </>
         )
     }
 
     return content
+}
+
+const BlockContentList: React.FC<{
+    blocks: PageType.PageNodeAny[],
+    metaData: PageType.MetaData,
+}> = ({ blocks, metaData }) => {
+    const groupedChildren = [] as PageType.PageNodeAny[][]
+    for (const child of blocks) {
+        const lastGroup = groupedChildren.at(groupedChildren.length - 1)
+        const lastType = lastGroup ? (lastGroup.at(0) ?? { type: "" }).type : ""
+        if (lastType === child.type) {
+            groupedChildren[groupedChildren.length - 1].push(child)
+        } else {
+            groupedChildren.push([child])
+        }
+    }
+    return (
+        <>
+            {groupedChildren.flatMap((group, i) => {
+                const preLength = groupedChildren.slice(0, i).reduce((ans, i) => (ans + i.length), 0)
+                return group.map((child, j) => (
+                    <BlockContent key={preLength + j} block={child} metaData={metaData} index={preLength + j} groupIndex={j} />
+                ))
+            })}
+        </>
+    )
 }
 
 const PageDescription: React.FC<{ pageData: PageType.Page }> = ({ pageData }) => {
@@ -324,9 +335,7 @@ export const PageRoot: React.FC<{ metaData: PageType.MetaData, pageInfo: PageTyp
                     <PageDescription pageData={metaData.id_to_data[root.id]} />
                 </header>
                 <div className="page-body">
-                    {root._children?.map((block, i) => (
-                        < key={i} block={block} metaData={metaData} index={i} />
-                    ))}
+                    {root._children ? <BlockContentList blocks={root._children} metaData={metaData} /> : ""}
                 </div>
             </article>
         )
