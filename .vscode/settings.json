@@ -3,5 +3,11 @@
         "default": true,
         "MD033": false
     },
-    "css.customData": [".vscode/tailwindcss.json"]
+    "css.customData": [
+        ".vscode/tailwindcss.json"
+    ],
+    "cSpell.words": [
+        "notionapi",
+        "notionlib"
+    ]
 }
