@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import PostMeta from '../../components/PostMeta.astro'
+import BlockRenderer from '../../components/BlockRenderer.astro'
+import Sidebar from '../../components/Sidebar.astro'
+import { getCollection } from 'astro:content'
+
+interface HeadingItem {
+  depth: number
+  text: string
+  id: string
+}
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts')
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }))
+}
+
+const { post } = Astro.props
+const { title: rawTitle, date, series, tags, summary, blocks } = post.data
+const title = rawTitle.trim()
+
+const headings: HeadingItem[] = []
+for (const block of blocks) {
+  if (block.type === 'heading_1' || block.type === 'heading_2' || block.type === 'heading_3') {
+    const text = (block.rich_text || []).map((rt: any) => rt.plain_text || '').join('')
+    if (text) {
+      headings.push({
+        depth: parseInt(block.type.split('_')[1]),
+        text,
+        id: text.toLowerCase().replace(/\s+/g, '-'),
+      })
+    }
+  }
+}
+---
+
+<BaseLayout title={title} description={summary}>
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex gap-8">
+      {headings.length > 0 && <div class="flex-1 hidden xl:block" />}
+      <article class={headings.length > 0 ? 'w-full max-w-3xl min-w-0' : 'w-full max-w-3xl mx-auto min-w-0'}>
+        <PostMeta {title} {date} {series} {tags} {summary} />
+        <div class="prose-custom">
+          <BlockRenderer {blocks} />
+        </div>
+      </article>
+      <Sidebar {headings} />
+    </div>
+  </div>
+</BaseLayout>

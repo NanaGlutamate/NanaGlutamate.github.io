@@ -1,0 +1,224 @@
+---
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+
+interface Props {
+  blocks: any[]
+}
+
+const { blocks } = Astro.props
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function renderKatex(expression: string, displayMode = true): string {
+  try {
+    return katex.renderToString(expression, { displayMode, throwOnError: false })
+  } catch {
+    return `<span class="text-red-500">KaTeX Error: ${escapeHtml(expression)}</span>`
+  }
+}
+
+function renderRichText(richText: any[]): string {
+  if (!richText || richText.length === 0) return ''
+  return richText.map((item) => {
+    let text = escapeHtml(item.plain_text || '')
+    const ann = item.annotations || {}
+
+    if (ann.bold) text = `<strong>${text}</strong>`
+    if (ann.italic) text = `<em>${text}</em>`
+    if (ann.strikethrough) text = `<del>${text}</del>`
+    if (ann.code) text = `<code class="notion-inline-code !px-1 !py-0.5 !rounded !text-sm !bg-[var(--inline-code-bg)] !text-[var(--inline-code-text)]">${text}</code>`
+
+    if (item.href) {
+      text = `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener noreferrer">${text}</a>`
+    }
+
+    if (item.type === 'equation' && item.expression) {
+      return renderKatex(item.expression, false)
+    }
+
+    if (item.type === 'mention' && item.mention_type === 'page') {
+      return `<span class="inline-flex items-center px-1.5 py-0.5 text-sm rounded bg-[var(--tag-bg)] text-[var(--tag-text)]">${text}</span>`
+    }
+
+    return text
+  }).join('')
+}
+
+function renderPlainText(richText: any[]): string {
+  if (!richText || richText.length === 0) return ''
+  return richText.map((item) => escapeHtml(item.plain_text || '')).join('')
+}
+
+function blockToHtml(block: any): string {
+  const { type } = block
+
+  switch (type) {
+    case 'paragraph': {
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<div class="ml-4">${blocksToHtml(block.children)}</div>`
+        : ''
+      if (!rt.trim()) {
+        if (childHtml) return childHtml
+        return '<br />'
+      }
+      return `<p>${rt}</p>${childHtml}`
+    }
+    case 'heading_1':
+    case 'heading_2':
+    case 'heading_3': {
+      const level = parseInt(type.split('_')[1])
+      const rt = renderRichText(block.rich_text)
+      if (!rt) return ''
+      const id = rt.replace(/<[^>]*>/g, '').trim().toLowerCase().replace(/\s+/g, '-')
+      const childHtml = block.children
+        ? `<div class="ml-4">${blocksToHtml(block.children)}</div>`
+        : ''
+      return `<h${level} id="${id}">${rt}</h${level}>${childHtml}`
+    }
+    case 'code': {
+      const code = renderPlainText(block.rich_text)
+      const lang = escapeHtml(block.language || '')
+      return `<pre><code class="language-${lang}">${code}</code></pre>`
+    }
+    case 'equation': {
+      return renderKatex(block.expression || '', true)
+    }
+    case 'divider':
+      return '<hr />'
+    case 'image':
+    case 'video':
+    case 'file':
+    case 'pdf': {
+      const src = escapeHtml(block.src || '')
+      const caption = block.caption ? renderRichText(block.caption) : ''
+      if (!src) return ''
+      if (type === 'video') {
+        return `<video src="${src}" controls class="rounded-lg max-w-full my-4"></video>${caption}`
+      }
+      if (type === 'file' || type === 'pdf') {
+        const icon = type === 'pdf' ? '📄' : '📎'
+        const label = caption.replace(/<[^>]*>/g, '') || src.split('/').pop() || src
+        return `<div class="my-3"><a href="${src}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--callout-bg)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">${icon} ${escapeHtml(label)}</a></div>`
+      }
+      const alt = caption.replace(/<[^>]*>/g, '') || 'image'
+      return `<img src="${src}" alt="${escapeHtml(alt)}" loading="lazy" />${caption}`
+    }
+    case 'callout': {
+      const emoji = block.emoji || '💡'
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<div class="mt-2">${blocksToHtml(block.children)}</div>`
+        : ''
+      return `<div class="callout-block"><span class="callout-emoji">${emoji}</span><div class="callout-content">${rt}${childHtml}</div></div>`
+    }
+    case 'quote': {
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? blocksToHtml(block.children)
+        : ''
+      return `<blockquote>${rt}${childHtml}</blockquote>`
+    }
+    case 'bulleted_list_item': {
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<ul class="!my-1">${blocksToHtml(block.children)}</ul>`
+        : ''
+      return `<li>${rt}${childHtml}</li>`
+    }
+    case 'numbered_list_item': {
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<ol class="!my-1">${blocksToHtml(block.children)}</ol>`
+        : ''
+      return `<li>${rt}${childHtml}</li>`
+    }
+    case 'toggle': {
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<div class="toggle-content">${blocksToHtml(block.children)}</div>`
+        : ''
+      return `<details class="toggle-block"><summary>${rt}</summary>${childHtml}</details>`
+    }
+    case 'bookmark': {
+      const caption = renderRichText(block.caption || [])
+      const url = escapeHtml(block.url || '#')
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="bookmark-card block no-underline!"><div class="text-sm text-[var(--text-secondary)]">🔗 ${caption || url}</div></a>`
+    }
+    case 'column_list': {
+      const childHtml = block.children ? blocksToHtml(block.children) : ''
+      return `<div class="column-list">${childHtml}</div>`
+    }
+    case 'column': {
+      const childHtml = block.children ? blocksToHtml(block.children) : ''
+      return `<div class="column">${childHtml}</div>`
+    }
+    case 'to_do': {
+      const checked = block.checked ? 'checked' : ''
+      const rt = renderRichText(block.rich_text)
+      const childHtml = block.children
+        ? `<div class="ml-8">${blocksToHtml(block.children)}</div>`
+        : ''
+      return `<div class="flex items-center gap-2 my-1"><input type="checkbox" ${checked} disabled class="rounded" /><span class="${block.checked ? 'line-through text-[var(--text-muted)]' : ''}">${rt}</span></div>${childHtml}`
+    }
+    case 'table': {
+      const rows = block.children ? blocksToHtml(block.children) : ''
+      return `<table>${rows}</table>`
+    }
+    case 'table_row': {
+      const cells = (block.cells || []).map((c: any[]) => renderRichText(c))
+        .map((cell: string) => `<td>${cell}</td>`)
+        .join('')
+      return `<tr>${cells}</tr>`
+    }
+    case 'synced_block': {
+      const childHtml = block.children ? blocksToHtml(block.children) : ''
+      return childHtml
+    }
+    case 'table_of_contents':
+      return ''
+    case 'link_to_page':
+      return ''
+    default:
+      return ''
+  }
+}
+
+function blocksToHtml(blocks: any[]): string {
+  let html = ''
+  let i = 0
+  while (i < blocks.length) {
+    const block = blocks[i]
+    const t = block.type
+
+    if (t === 'bulleted_list_item') {
+      html += '<ul class="!my-2">'
+      while (i < blocks.length && blocks[i].type === 'bulleted_list_item') {
+        html += blockToHtml(blocks[i])
+        i++
+      }
+      html += '</ul>'
+    } else if (t === 'numbered_list_item') {
+      html += '<ol class="!my-2">'
+      while (i < blocks.length && blocks[i].type === 'numbered_list_item') {
+        html += blockToHtml(blocks[i])
+        i++
+      }
+      html += '</ol>'
+    } else {
+      html += blockToHtml(block)
+      i++
+    }
+  }
+  return html
+}
+---
+
+<Fragment set:html={blocksToHtml(blocks)} />

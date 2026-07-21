@@ -1,0 +1,338 @@
+import sys
+import json
+import os
+import shutil
+from pathlib import Path
+
+PUBLISHED_STATUS = '发布'
+TEST_STATUS = '调试'
+
+PROJECT_ROOT = Path(__file__).parent.parent
+PUBLIC_COLLECTED = PROJECT_ROOT / 'public' / 'collected'
+NOTION_BACKUP = PROJECT_ROOT / 'NotionBackup'
+NOTION_CACHE = NOTION_BACKUP / '.notion-cache'
+RAW_DIR = NOTION_CACHE / '_raw'
+
+sys.path.insert(0, str(NOTION_BACKUP))
+
+_original_cwd = os.getcwd()
+os.chdir(str(NOTION_BACKUP))
+try:
+    from toolkit.notionlib2 import PageCache, ID, TYPE, CHILDREN, CHILD_PAGE, CHILD_DATABASE, DATA
+finally:
+    os.chdir(_original_cwd)
+
+
+def _load_env():
+    env = {}
+    env_local = PROJECT_ROOT / '.env.local'
+    if env_local.exists():
+        with open(env_local, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    if '=' in line:
+                        k, v = line.split('=', 1)
+                        env[k.strip()] = v.strip()
+
+    config_json = NOTION_BACKUP / 'config.json'
+    if config_json.exists() and 'NOTION_TOKEN' not in env:
+        with open(config_json, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+        env['NOTION_TOKEN'] = cfg.get('NOTION_TOKEN', '')
+
+    if 'NOTION_TOKEN' in env:
+        os.environ.setdefault('NOTION_TOKEN', env['NOTION_TOKEN'])
+
+    return env
+
+
+def get_plain_text(rich_text):
+    if not rich_text:
+        return ''
+    return ''.join(item.get('plain_text', '') for item in rich_text)
+
+
+def simplify_rich_text(rich_text):
+    result = []
+    for item in (rich_text or []):
+        entry = {
+            'type': item.get('type', 'text'),
+            'plain_text': item.get('plain_text', ''),
+            'annotations': item.get('annotations', {}),
+        }
+        if item.get('type') == 'text':
+            entry['href'] = item.get('href')
+        elif item.get('type') == 'mention':
+            entry['mention_type'] = item.get('mention', {}).get('type', '')
+            if entry['mention_type'] == 'page':
+                entry['page_id'] = item.get('mention', {}).get('page', {}).get('id', '')
+        elif item.get('type') == 'equation':
+            entry['expression'] = item.get('equation', {}).get('expression', '')
+        result.append(entry)
+    return result
+
+
+def handle_media_block(block):
+    block_type = block[TYPE]
+    if block_type not in ('image', 'video', 'file', 'pdf'):
+        return None
+
+    block_key = block[ID].replace('-', '')
+    prefix = block_key[:2]
+    raw_path = RAW_DIR / prefix / block_key
+
+    if raw_path.exists():
+        ext_map = {'image': 'png', 'video': 'mp4', 'pdf': 'pdf'}
+        ext = ext_map.get(block_type, 'bin')
+        dest_name = f'{block_key}.{ext}'
+        dest_path = PUBLIC_COLLECTED / dest_name
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        if not dest_path.exists():
+            shutil.copy2(raw_path, dest_path)
+        return f'/collected/{dest_name}'
+
+    block_data = block.get(block_type, {})
+    inner_type = block_data.get('type', '')
+    if inner_type == 'external' and block_data.get('external', {}).get('url'):
+        return block_data['external']['url']
+    if inner_type == 'file' and block_data.get('file', {}).get('url'):
+        return block_data['file']['url']
+
+    return None
+
+
+def simplify_block(block):
+    block_type = block.get(TYPE, 'unknown')
+    simplified = {'type': block_type}
+
+    if block_type in ('paragraph', 'heading_1', 'heading_2', 'heading_3', 'quote', 'to_do'):
+        data = block.get(block_type, {})
+        simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
+        if 'color' in data:
+            simplified['color'] = data['color']
+        if block_type == 'to_do':
+            simplified['checked'] = data.get('checked', False)
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'code':
+        data = block.get(block_type, {})
+        simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
+        simplified['language'] = data.get('language', 'plain text')
+
+    elif block_type == 'equation':
+        simplified['expression'] = block.get(block_type, {}).get('expression', '')
+
+    elif block_type == 'divider':
+        pass
+
+    elif block_type in ('image', 'video', 'file', 'pdf'):
+        data = block.get(block_type, {})
+        src = handle_media_block(block)
+        if src:
+            simplified['src'] = src
+            simplified['caption'] = simplify_rich_text(data.get('caption', []))
+        else:
+            simplified['src'] = ''
+
+    elif block_type == 'callout':
+        data = block.get(block_type, {})
+        simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
+        simplified['color'] = data.get('color', 'default')
+        icon = data.get('icon', {})
+        if icon.get('type') == 'emoji':
+            simplified['emoji'] = icon.get('emoji', '')
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'bookmark':
+        data = block.get(block_type, {})
+        simplified['url'] = data.get('url', '')
+        simplified['caption'] = simplify_rich_text(data.get('caption', []))
+
+    elif block_type == 'table_of_contents':
+        data = block.get(block_type, {})
+        simplified['color'] = data.get('color', 'default')
+
+    elif block_type in ('bulleted_list_item', 'numbered_list_item'):
+        data = block.get(block_type, {})
+        simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'toggle':
+        data = block.get(block_type, {})
+        simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'column_list':
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'column':
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'table':
+        data = block.get(block_type, {})
+        simplified['table_width'] = data.get('table_width', 2)
+        simplified['has_column_header'] = data.get('has_column_header', False)
+        simplified['has_row_header'] = data.get('has_row_header', False)
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'table_row':
+        if 'cells' in block.get(block_type, {}):
+            simplified['cells'] = [
+                simplify_rich_text(cell)
+                for cell in block[block_type]['cells']
+            ]
+
+    elif block_type == 'synced_block':
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    elif block_type == 'link_to_page':
+        data = block.get(block_type, {})
+        simplified['page_id'] = data.get('page_id', '')
+
+    else:
+        if CHILDREN in block:
+            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+
+    return simplified
+
+
+def simplify_page_blocks(children):
+    return [simplify_block(block) for block in (children or [])]
+
+
+def extract_properties(row):
+    props = row.get('properties', {})
+
+    title = ''
+    page_id = ''
+    page_prop = props.get('Page', {})
+    title_items = page_prop.get('title', [])
+    if title_items and title_items[0].get('type') == 'mention':
+        mention = title_items[0].get('mention', {})
+        if mention.get('type') == 'page':
+            page_id = mention.get('page', {}).get('id', '')
+        title = get_plain_text(title_items).strip()
+
+    slug = ''
+    slug_prop = props.get('Slug', {})
+    slug_text = slug_prop.get('rich_text', [])
+    if slug_text:
+        slug = get_plain_text(slug_text)
+
+    date_val = None
+    date_prop = props.get('Date', {})
+    date_data = date_prop.get('date', {})
+    if date_data and date_data.get('start'):
+        date_val = date_data['start']
+
+    series = None
+    series_prop = props.get('Series', {})
+    series_data = series_prop.get('select')
+    if series_data:
+        series = series_data.get('name')
+
+    tags = []
+    tag_prop = props.get('Tag', {})
+    tag_data = tag_prop.get('multi_select', [])
+    for t in tag_data:
+        tags.append({'name': t.get('name', ''), 'color': t.get('color', 'default')})
+
+    status = ''
+    status_prop = props.get('Status', {})
+    status_data = status_prop.get('status', {})
+    if status_data:
+        status = status_data.get('name', '')
+
+    summary = ''
+    summary_prop = props.get('Summary', {})
+    summary_text = summary_prop.get('rich_text', [])
+    if summary_text:
+        summary = get_plain_text(summary_text)
+
+    return {
+        'title': title,
+        'slug': slug,
+        'date': date_val,
+        'series': series,
+        'tags': tags,
+        'status': status,
+        'summary': summary,
+        'page_id': page_id,
+    }
+
+
+def log(msg: str) -> None:
+    print(msg, file=sys.stderr)
+
+
+def main():
+    os.chdir(str(NOTION_BACKUP))
+    env = _load_env()
+
+    db_id = env.get('RELEASE_DATABASE_ID', '')
+    if not db_id:
+        log('ERROR: RELEASE_DATABASE_ID not found in .env.local')
+        sys.exit(1)
+
+    log(f'Using database ID: {db_id}')
+    cache = PageCache()
+
+    db_entry = cache.assemble_page(db_id)
+    rows = db_entry.get(DATA, [])
+    log(f'Found {len(rows)} rows in database')
+
+    posts = []
+    PUBLIC_COLLECTED.mkdir(parents=True, exist_ok=True)
+
+    for row in rows:
+        meta = extract_properties(row)
+        allowed_statuses = {PUBLISHED_STATUS}
+        include_test = os.environ.get('BLOG_INCLUDE_TEST', '') == 'true' or '--debug' in sys.argv
+        if include_test:
+            allowed_statuses.add(TEST_STATUS)
+        if not meta['slug'] or meta['status'] not in allowed_statuses:
+            continue
+
+        if not meta['page_id']:
+            log(f'  SKIP (no page_id): {meta["title"]}')
+            continue
+
+        log(f'  Processing: {meta["title"]} ({meta["slug"]})')
+
+        try:
+            page = cache.assemble_page(meta['page_id'])
+        except Exception as e:
+            log(f'    ERROR assembling page: {e}')
+            continue
+
+        blocks = simplify_page_blocks(page.get(CHILDREN, []))
+
+        post_data = {
+            'slug': meta['slug'],
+            'title': meta['title'],
+            'date': meta['date'],
+            'series': meta['series'],
+            'tags': meta['tags'],
+            'status': meta['status'],
+            'summary': meta['summary'],
+            'blocks': blocks,
+        }
+
+        posts.append(post_data)
+        log(f'    -> {len(blocks)} blocks')
+
+    sys.stdout.write(json.dumps(posts, ensure_ascii=False))
+    log(f'\nTotal posts with allowed statuses: {len(posts)}')
+
+
+if __name__ == '__main__':
+    main()

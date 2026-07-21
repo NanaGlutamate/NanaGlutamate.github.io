@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navbar-height: 3.5rem;
+  --bg: #fafafa;
+  --bg-secondary: #f3f4f6;
+  --text: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --border: #e5e7eb;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --callout-bg: #f3f4f6;
+  --code-bg: #f1f5f9;
+  --sidebar-bg: #f3f4f6;
+  --sidebar-text: #374151;
+  --sidebar-hover: #e5e7eb;
+  --sidebar-active: #dbeafe;
+  --navbar-bg: rgba(250, 250, 250, 0.85);
+  --divider: #e5e7eb;
+  --tag-bg: #eff6ff;
+  --tag-text: #1d4ed8;
+  --inline-code-bg: #f1f5f9;
+  --inline-code-text: #dc2626;
+  --toc-border: #e5e7eb;
+}
+
+.dark {
+  --bg: #0f172a;
+  --bg-secondary: #1e293b;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #60a5fa;
+  --accent-hover: #93bbfd;
+  --border: #334155;
+  --card-bg: #1e293b;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --callout-bg: #1e293b;
+  --code-bg: #1e293b;
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #cbd5e1;
+  --sidebar-hover: #334155;
+  --sidebar-active: #1e3a5f;
+  --navbar-bg: rgba(15, 23, 42, 0.85);
+  --divider: #334155;
+  --tag-bg: #1e3a5f;
+  --tag-text: #93bbfd;
+  --inline-code-bg: #1e293b;
+  --inline-code-text: #f87171;
+  --toc-border: #334155;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .prose-custom {
+    @apply text-[var(--text)] leading-relaxed;
+  }
+  .prose-custom h1 {
+    @apply text-3xl font-bold mt-10 mb-4 text-[var(--text)];
+  }
+  .prose-custom h2 {
+    @apply text-2xl font-semibold mt-8 mb-3 text-[var(--text)];
+  }
+  .prose-custom h3 {
+    @apply text-xl font-semibold mt-6 mb-2 text-[var(--text)];
+  }
+  .prose-custom p {
+    @apply my-3 leading-7;
+  }
+  .prose-custom a {
+    @apply text-[var(--accent)] hover:text-[var(--accent-hover)] underline underline-offset-2;
+  }
+  .prose-custom blockquote {
+    @apply border-l-4 border-[var(--accent)] pl-4 my-4 italic text-[var(--text-secondary)];
+  }
+  .prose-custom ul {
+    @apply list-disc list-inside my-3 space-y-1;
+  }
+  .prose-custom ol {
+    @apply list-decimal list-inside my-3 space-y-1;
+  }
+  .prose-custom li > ul,
+  .prose-custom li > ol {
+    @apply ml-4;
+  }
+  .prose-custom pre {
+    @apply bg-[var(--code-bg)] rounded-lg p-4 my-4 overflow-x-auto border border-[var(--border)];
+  }
+  .prose-custom code {
+    @apply font-mono text-sm;
+  }
+  .prose-custom :not(pre) > code {
+    @apply bg-[var(--inline-code-bg)] text-[var(--inline-code-text)] px-1.5 py-0.5 rounded text-sm;
+  }
+  .prose-custom hr {
+    @apply border-[var(--divider)] my-8;
+  }
+  .prose-custom img {
+    @apply rounded-lg max-w-full my-4;
+  }
+  .prose-custom table {
+    @apply w-full border-collapse my-4;
+  }
+  .prose-custom th {
+    @apply border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-left font-semibold;
+  }
+  .prose-custom td {
+    @apply border border-[var(--border)] px-4 py-2;
+  }
+  .prose-custom .katex-display {
+    @apply my-4;
+  }
+  .prose-custom .callout-block {
+    @apply bg-[var(--callout-bg)] border border-[var(--border)] rounded-lg p-4 my-4 flex gap-3;
+  }
+  .prose-custom .callout-emoji {
+    @apply text-xl flex-shrink-0 leading-7;
+  }
+  .prose-custom .callout-content {
+    @apply flex-1 min-w-0;
+  }
+  .prose-custom details.toggle-block {
+    @apply my-3 border border-[var(--border)] rounded-lg;
+  }
+  .prose-custom details.toggle-block > summary {
+    @apply cursor-pointer p-3 bg-[var(--bg-secondary)] rounded-lg font-medium;
+  }
+  .prose-custom details.toggle-block > .toggle-content {
+    @apply px-4 pb-3;
+  }
+  .prose-custom .bookmark-card {
+    @apply border border-[var(--border)] rounded-lg p-4 my-4 hover:bg-[var(--bg-secondary)] transition-colors;
+  }
+  .prose-custom .column-list {
+    @apply flex gap-4 my-4;
+  }
+  .prose-custom .column {
+    @apply flex-1;
+  }
+}
+
+/* KaTeX overrides for dark mode */
+.dark .katex { color: var(--text); }
+.dark .katex .mord { color: var(--text); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+.sidebar-toc {
+  scrollbar-width: none;
+}
+.sidebar-toc::-webkit-scrollbar {
+  display: none;
+}

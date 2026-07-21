@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getCollection } from 'astro:content'
+import { formatDate } from '../../lib/date'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts')
+  const seriesNames = new Set<string>()
+  for (const post of posts) {
+    if (post.data.series) seriesNames.add(post.data.series)
+  }
+  return Array.from(seriesNames).map((name) => ({
+    params: { name },
+    props: { name },
+  }))
+}
+
+const { name } = Astro.props
+const allPosts = await getCollection('posts')
+const posts = allPosts
+  .filter((p) => p.data.series === name)
+  .sort((a, b) => {
+    const da = a.data.date || '0'
+    const db = b.data.date || '0'
+    return db.localeCompare(da)
+  })
+---
+
+<BaseLayout title={`${name} · 系列`} description={`系列: ${name}`}>
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <a href="/series" class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+        &larr; 所有系列
+      </a>
+      <h1 class="text-2xl font-bold mt-2 text-[var(--text)]">{name}</h1>
+      <p class="text-sm text-[var(--text-muted)] mt-1">{posts.length} 篇文章</p>
+    </div>
+
+    <div class="space-y-4">
+      {posts.map((post) => (
+        <a
+          href={`/posts/${post.data.slug}`}
+          class="block p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow"
+        >
+          <h2 class="font-semibold text-[var(--text)] hover:text-[var(--accent)] transition-colors">
+            {post.data.title.trim()}
+          </h2>
+          <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--text-muted)]">
+            {post.data.date && <span>{formatDate(post.data.date, 'long')}</span>}
+            {post.data.tags.map((tag: { name: string; color: string }) => (
+              <span class="px-1.5 py-0.5 rounded-full bg-[var(--tag-bg)] text-[var(--tag-text)]">
+                {tag.name}
+              </span>
+            ))}
+          </div>
+          {post.data.summary && (
+            <p class="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">{post.data.summary}</p>
+          )}
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

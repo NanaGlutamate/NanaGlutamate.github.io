@@ -1,0 +1,26 @@
+{
+  "name": "homepage",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "fetch": "python scripts/fetch-posts.py",
+    "build:debug": "node -e \"process.env.BLOG_INCLUDE_TEST='true';require('child_process').execSync('astro build',{stdio:'inherit'})\"",
+    "build:preview": "node -e \"process.env.BLOG_INCLUDE_TEST='true';let e=require('child_process');e.execSync('astro build',{stdio:'inherit'});e.execSync('astro preview',{stdio:'inherit'})\""
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.2.1",
+    "@astrojs/tailwind": "^5.1.4",
+    "astro": "^5.1.0",
+    "katex": "^0.16.11",
+    "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

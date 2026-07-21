@@ -1,0 +1,16 @@
+<button
+  id="theme-toggle"
+  class="p-2 rounded-lg hover:bg-[var(--sidebar-hover)] transition-colors"
+  aria-label="Toggle theme"
+>
+  <span class="sun-icon hidden dark:inline">☀️</span>
+  <span class="moon-icon dark:hidden">🌙</span>
+</button>
+
+<script>
+  const btn = document.getElementById('theme-toggle')
+  btn?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark')
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  })
+</script>

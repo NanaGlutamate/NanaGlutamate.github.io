@@ -1,0 +1,40 @@
+---
+import ThemeToggle from './ThemeToggle.astro'
+
+const navItems = [
+  { label: '文章', href: '/' },
+  { label: '系列', href: '/series' },
+  { label: '小玩具', href: '/toys' },
+]
+
+const currentPath = Astro.url.pathname
+---
+
+<nav class="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)] bg-[var(--navbar-bg)] backdrop-blur-md" style="height: var(--navbar-height)">
+  <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+    <a href="/" class="font-bold text-lg text-[var(--text)] hover:text-[var(--accent)] transition-colors">
+      HomePage
+    </a>
+
+    <div class="flex items-center gap-1">
+      {navItems.map((item) => {
+        const isActive = item.href === '/'
+          ? currentPath === '/'
+          : currentPath.startsWith(item.href)
+        return (
+          <a
+            href={item.href}
+            class={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-[var(--sidebar-active)] text-[var(--accent)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--sidebar-hover)]'
+            }`}
+          >
+            {item.label}
+          </a>
+        )
+      })}
+      <ThemeToggle />
+    </div>
+  </div>
+</nav>
