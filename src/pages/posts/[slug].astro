@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import PostMeta from '../../components/PostMeta.astro'
 import BlockRenderer from '../../components/BlockRenderer.astro'
-import Sidebar from '../../components/Sidebar.astro'
+import LeftSidebar from '../../components/LeftSidebar.astro'
 import { getCollection } from 'astro:content'
 
 interface HeadingItem {
@@ -39,16 +39,54 @@ for (const block of blocks) {
 ---
 
 <BaseLayout title={title} description={summary}>
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="flex gap-8">
-      {headings.length > 0 && <div class="flex-1 hidden xl:block" />}
-      <article class={headings.length > 0 ? 'w-full max-w-3xl min-w-0' : 'w-full max-w-3xl mx-auto min-w-0'}>
-        <PostMeta {title} {date} {series} {tags} {summary} />
-        <div class="prose-custom">
-          <BlockRenderer {blocks} />
-        </div>
-      </article>
-      <Sidebar {headings} />
+  <div class="max-w-[1280px] mx-auto">
+    <div class="flex">
+      <LeftSidebar {headings} />
+
+      <div class="flex-1 min-w-0 px-4 xl:px-10 py-8">
+        <article class="max-w-[680px] mx-auto xl:mx-0 relative">
+          <PostMeta {title} {date} {series} {tags} {summary} />
+          <div class="prose-custom">
+            <BlockRenderer {blocks} />
+          </div>
+        </article>
+      </div>
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  (function() {
+    const links = document.querySelectorAll('[data-toc-link]')
+    if (links.length === 0) return
+
+    const ids = Array.from(links).map(a => a.getAttribute('href')!.slice(1))
+    const headings = ids.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[]
+    if (headings.length === 0) return
+
+    const nav = links[0].closest('.toc-links')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const idx = headings.indexOf(entry.target as HTMLElement)
+            if (idx === -1) continue
+            links.forEach(l => l.classList.remove('active'))
+            const active = links[idx] as HTMLElement
+            active.classList.add('active')
+            if (nav) {
+              const navRect = nav.getBoundingClientRect()
+              const linkRect = active.getBoundingClientRect()
+              if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
+                active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+              }
+            }
+          }
+        }
+      },
+      { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
+    )
+
+    headings.forEach(h => observer.observe(h))
+  })()
+</script>

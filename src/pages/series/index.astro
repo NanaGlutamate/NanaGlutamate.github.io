@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
+import LeftSidebar from '../../components/LeftSidebar.astro'
 import { getCollection } from 'astro:content'
 import { formatDate } from '../../lib/date'
 
@@ -23,36 +24,44 @@ const seriesList = Array.from(seriesMap.entries()).sort((a, b) => a[0].localeCom
 ---
 
 <BaseLayout title="系列" description="按系列浏览文章">
-  <div class="max-w-3xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-8 text-[var(--text)]">系列</h1>
+  <div class="max-w-[1280px] mx-auto">
+    <div class="flex">
+      <LeftSidebar />
 
-    {seriesList.length === 0 ? (
-      <p class="text-[var(--text-muted)]">暂无系列</p>
-    ) : (
-      <div class="space-y-8">
-        {seriesList.map(([name, seriesPosts]) => (
-          <section>
-            <h2 class="text-lg font-semibold mb-4 text-[var(--text)]">{name}</h2>
-            <div class="space-y-3">
-              {seriesPosts.map((p) => (
-                <a
-                  href={`/posts/${p.data.slug}`}
-                  class="flex items-center justify-between p-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow"
-                >
-                  <span class="font-medium text-[var(--text)] hover:text-[var(--accent)] transition-colors">
-                    {p.data.title.trim()}
-                  </span>
-                  {p.data.date && (
-                    <span class="text-xs text-[var(--text-muted)] ml-4 flex-shrink-0">
-                      {formatDate(p.data.date)}
-                    </span>
-                  )}
-                </a>
+      <div class="flex-1 min-w-0 px-4 xl:px-10 py-8">
+        <div class="max-w-[680px] mx-auto xl:mx-0">
+          <h1 class="text-2xl font-bold mb-8 text-[var(--text)]">系列</h1>
+
+          {seriesList.length === 0 ? (
+            <p class="text-[var(--text-muted)]">暂无系列</p>
+          ) : (
+            <div class="space-y-8">
+              {seriesList.map(([name, seriesPosts]) => (
+                <section>
+                  <h2 class="text-lg font-semibold mb-4 text-[var(--text)]">{name}</h2>
+                  <div class="space-y-3">
+                    {seriesPosts.map((p) => (
+                      <a
+                        href={`/posts/${p.data.slug}`}
+                        class="flex items-center justify-between p-3 rounded-lg bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow"
+                      >
+                        <span class="font-medium text-[var(--text)] hover:text-[var(--accent)] transition-colors">
+                          {p.data.title.trim()}
+                        </span>
+                        {p.data.date && (
+                          <span class="text-xs text-[var(--text-muted)] ml-4 flex-shrink-0">
+                            {formatDate(p.data.date)}
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
-          </section>
-        ))}
+          )}
+        </div>
       </div>
-    )}
+    </div>
   </div>
 </BaseLayout>

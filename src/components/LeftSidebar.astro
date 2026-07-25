@@ -1,0 +1,74 @@
+---
+import ThemeToggle from './ThemeToggle.astro'
+
+interface HeadingItem {
+  depth: number
+  text: string
+  id: string
+}
+
+interface Props {
+  headings?: HeadingItem[]
+}
+
+const { headings = [] } = Astro.props
+const currentPath = Astro.url.pathname
+
+const navItems = [
+  { label: '文章', href: '/' },
+  { label: '系列', href: '/series' },
+  { label: '其他', href: '/toys' },
+]
+---
+
+<aside class="left-sidebar hidden xl:flex flex-col w-[240px] flex-shrink-0 min-h-screen bg-[var(--sidebar-bg)] border-r border-[var(--border)]">
+  <div class="sticky top-0 px-5 py-8">
+    <a href="/" class="block mb-8">
+      <span class="text-xl font-bold text-[var(--text)] hover:text-[var(--accent)] transition-colors">HomePage</span>
+    </a>
+
+    <nav class="mb-6 space-y-0.5">
+      {navItems.map((item) => {
+        const isActive = item.href === '/'
+          ? currentPath === '/'
+          : currentPath.startsWith(item.href)
+        return (
+          <a
+            href={item.href}
+            class={`block px-2 py-1.5 rounded text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-[var(--sidebar-active)] text-[var(--accent)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--sidebar-hover)]'
+            }`}
+          >
+            {item.label}
+          </a>
+        )
+      })}
+    </nav>
+
+    <div class="px-2">
+      <ThemeToggle />
+    </div>
+
+    {headings.length > 0 && (
+      <>
+        <hr class="border-[var(--border)] my-4" />
+        <div class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3 px-2">
+          目录
+        </div>
+        <nav class="toc-links space-y-0">
+          {headings.map((h, i) => (
+            <a
+              href={`#${h.id}`}
+              data-toc-link={i}
+              class={`toc-link ${h.depth === 1 ? 'toc-depth-0' : h.depth === 2 ? 'toc-depth-1' : 'toc-depth-2'}`}
+            >
+              {h.text}
+            </a>
+          ))}
+        </nav>
+      </>
+    )}
+  </div>
+</aside>
