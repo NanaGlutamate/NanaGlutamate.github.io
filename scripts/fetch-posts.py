@@ -1,18 +1,14 @@
 import sys
 import json
 import os
-import shutil
 from pathlib import Path
 
 PUBLISHED_STATUS = '发布'
 TEST_STATUS = '调试'
 
 PROJECT_ROOT = Path(__file__).parent.parent
-PUBLIC_COLLECTED = PROJECT_ROOT / 'public' / 'collected'
+PUBLIC_RAW = PROJECT_ROOT / 'public' / 'raw'
 NOTION_BACKUP = PROJECT_ROOT / 'NotionBackup'
-NOTION_CACHE = NOTION_BACKUP / '.notion-cache'
-RAW_DIR = NOTION_CACHE / '_raw'
-
 sys.path.insert(0, str(NOTION_BACKUP))
 
 _original_cwd = os.getcwd()
@@ -73,24 +69,35 @@ def simplify_rich_text(rich_text):
     return result
 
 
-def handle_media_block(block):
+def _find_raw_filename(block_key, raw_dir):
+    prefix = block_key[:2]
+    marker = f'{block_key}[bin]'
+    for base in (raw_dir, raw_dir / prefix):
+        if not base.exists():
+            continue
+        for f in base.iterdir():
+            if f.is_file() and f.name.startswith(marker):
+                return f.name.split('[bin]', 1)[1]
+    return None
+
+
+def handle_media_block(block, cache):
     block_type = block[TYPE]
     if block_type not in ('image', 'video', 'file', 'pdf'):
         return None
 
     block_key = block[ID].replace('-', '')
-    prefix = block_key[:2]
-    raw_path = RAW_DIR / prefix / block_key
 
-    if raw_path.exists():
-        ext_map = {'image': 'png', 'video': 'mp4', 'pdf': 'pdf'}
-        ext = ext_map.get(block_type, 'bin')
-        dest_name = f'{block_key}.{ext}'
-        dest_path = PUBLIC_COLLECTED / dest_name
+    raw_bytes = cache._raw_storage.get(block_key)
+    if raw_bytes:
+        dest_name = _find_raw_filename(block_key, NOTION_BACKUP / '.notion-cache' / '_raw')
+        if not dest_name:
+            return None
+        dest_path = PUBLIC_RAW / dest_name
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         if not dest_path.exists():
-            shutil.copy2(raw_path, dest_path)
-        return f'/collected/{dest_name}'
+            dest_path.write_bytes(raw_bytes)
+        return f'/raw/{dest_name}'
 
     block_data = block.get(block_type, {})
     inner_type = block_data.get('type', '')
@@ -102,7 +109,7 @@ def handle_media_block(block):
     return None
 
 
-def simplify_block(block):
+def simplify_block(block, cache):
     block_type = block.get(TYPE, 'unknown')
     simplified = {'type': block_type}
 
@@ -114,7 +121,7 @@ def simplify_block(block):
         if block_type == 'to_do':
             simplified['checked'] = data.get('checked', False)
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'code':
         data = block.get(block_type, {})
@@ -129,7 +136,7 @@ def simplify_block(block):
 
     elif block_type in ('image', 'video', 'file', 'pdf'):
         data = block.get(block_type, {})
-        src = handle_media_block(block)
+        src = handle_media_block(block, cache)
         if src:
             simplified['src'] = src
             simplified['caption'] = simplify_rich_text(data.get('caption', []))
@@ -144,7 +151,7 @@ def simplify_block(block):
         if icon.get('type') == 'emoji':
             simplified['emoji'] = icon.get('emoji', '')
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'bookmark':
         data = block.get(block_type, {})
@@ -159,21 +166,21 @@ def simplify_block(block):
         data = block.get(block_type, {})
         simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'toggle':
         data = block.get(block_type, {})
         simplified['rich_text'] = simplify_rich_text(data.get('rich_text', []))
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'column_list':
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'column':
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'table':
         data = block.get(block_type, {})
@@ -181,7 +188,7 @@ def simplify_block(block):
         simplified['has_column_header'] = data.get('has_column_header', False)
         simplified['has_row_header'] = data.get('has_row_header', False)
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'table_row':
         if 'cells' in block.get(block_type, {}):
@@ -192,7 +199,7 @@ def simplify_block(block):
 
     elif block_type == 'synced_block':
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     elif block_type == 'link_to_page':
         data = block.get(block_type, {})
@@ -200,13 +207,13 @@ def simplify_block(block):
 
     else:
         if CHILDREN in block:
-            simplified['children'] = [simplify_block(c) for c in block[CHILDREN]]
+            simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
     return simplified
 
 
-def simplify_page_blocks(children):
-    return [simplify_block(block) for block in (children or [])]
+def simplify_page_blocks(children, cache):
+    return [simplify_block(block, cache) for block in (children or [])]
 
 
 def extract_properties(row):
@@ -291,7 +298,7 @@ def main():
     log(f'Found {len(rows)} rows in database')
 
     posts = []
-    PUBLIC_COLLECTED.mkdir(parents=True, exist_ok=True)
+    PUBLIC_RAW.mkdir(parents=True, exist_ok=True)
 
     for row in rows:
         meta = extract_properties(row)
@@ -314,7 +321,7 @@ def main():
             log(f'    ERROR assembling page: {e}')
             continue
 
-        blocks = simplify_page_blocks(page.get(CHILDREN, []))
+        blocks = simplify_page_blocks(page.get(CHILDREN, []), cache)
 
         post_data = {
             'slug': meta['slug'],
