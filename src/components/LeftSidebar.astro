@@ -23,8 +23,8 @@ const navItems = [
 ]
 ---
 
-<aside class="left-sidebar hidden xl:flex flex-col w-[240px] flex-shrink-0 min-h-screen bg-[var(--sidebar-bg)] border-r border-[var(--border)]">
-  <div class="sticky top-0 px-5 py-8">
+<aside class="left-sidebar hidden xl:flex flex-col w-[240px] flex-shrink-0 h-screen sticky top-0 bg-[var(--sidebar-bg)] border-r border-[var(--border)]">
+  <div class="flex-shrink-0 px-5 pt-8 pb-4">
     <a href="/" class="block mb-8">
       <span class="text-xl font-bold text-[var(--text)] hover:text-[var(--accent)] transition-colors">HomePage</span>
     </a>
@@ -59,18 +59,21 @@ const navItems = [
         <div class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3 px-2">
           目录
         </div>
-        <nav class="toc-links space-y-0">
-          {headings.map((h, i) => (
-            <a
-              href={`#${h.id}`}
-              data-toc-link={i}
-              class={`toc-link ${h.depth === 1 ? 'toc-depth-0' : h.depth === 2 ? 'toc-depth-1' : 'toc-depth-2'}`}
-            >
-              {h.text}
-            </a>
-          ))}
-        </nav>
       </>
     )}
   </div>
+
+  {headings.length > 0 && (
+    <nav class="toc-links flex-1 overflow-y-auto space-y-0 px-5 pb-8">
+      {headings.map((h, i) => (
+        <a
+          href={`#${h.id}`}
+          data-toc-link={i}
+          class={`toc-link ${h.depth === 1 ? 'toc-depth-0' : h.depth === 2 ? 'toc-depth-1' : 'toc-depth-2'}`}
+        >
+          {h.text}
+        </a>
+      ))}
+    </nav>
+  )}
 </aside>

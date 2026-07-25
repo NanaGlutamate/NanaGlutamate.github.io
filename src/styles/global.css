@@ -373,6 +373,12 @@
     border-left-color: var(--accent);
     font-weight: 500;
   }
+  .left-sidebar .toc-links {
+    scrollbar-width: none;
+  }
+  .left-sidebar .toc-links::-webkit-scrollbar {
+    display: none;
+  }
   .left-sidebar .toc-depth-0 { padding-left: 12px; font-weight: 500; }
   .left-sidebar .toc-depth-1 { padding-left: 24px; }
   .left-sidebar .toc-depth-2 { padding-left: 36px; }
