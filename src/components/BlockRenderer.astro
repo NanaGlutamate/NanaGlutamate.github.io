@@ -56,6 +56,15 @@ function renderPlainText(richText: any[]): string {
   return richText.map((item) => escapeHtml(item.plain_text || '')).join('')
 }
 
+function renderRegularCallout(block: any): string {
+  const emoji = block.emoji || '💡'
+  const rt = renderRichText(block.rich_text)
+  const childHtml = block.children
+    ? `<div class="mt-1.5">${blocksToHtml(block.children)}</div>`
+    : ''
+  return `<div class="callout-box"><span class="callout-box-emoji">${emoji}</span><div class="flex-1 min-w-0">${rt}${childHtml}</div></div>`
+}
+
 function renderSidenoteCallout(block: any): string {
   const emoji = block.emoji || '💡'
   const rt = renderRichText(block.rich_text)
@@ -74,20 +83,31 @@ function renderInlineCallout(block: any): string {
   return `<div class="callout-inline xl:hidden"><span class="sidenote-emoji">${emoji}</span><div class="flex-1 min-w-0">${rt}${childHtml}</div></div>`
 }
 
+function renderChildrenWithSidenote(parentHtml: string, children: any[]): string {
+  if (!children || children.length === 0) return parentHtml
+  if (children[0]?.type !== 'callout') {
+    return parentHtml + blocksToHtml(children)
+  }
+  const sidenoteCallout = children[0]
+  const restChildren = children.slice(1)
+  return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target">${parentHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>` + blocksToHtml(restChildren)
+}
+
 function blockToHtml(block: any): string {
   const { type } = block
 
   switch (type) {
     case 'paragraph': {
       const rt = renderRichText(block.rich_text)
-      const childHtml = block.children
-        ? `<div class="ml-4">${blocksToHtml(block.children)}</div>`
-        : ''
       if (!rt.trim()) {
-        if (childHtml) return childHtml
+        if (block.children) return blocksToHtml(block.children)
         return '<br />'
       }
-      return `<p>${rt}</p>${childHtml}`
+      const contentHtml = `<p>${rt}</p>`
+      if (block.children) {
+        return renderChildrenWithSidenote(contentHtml, block.children)
+      }
+      return contentHtml
     }
     case 'heading_1':
     case 'heading_2':
@@ -96,10 +116,11 @@ function blockToHtml(block: any): string {
       const rt = renderRichText(block.rich_text)
       if (!rt) return ''
       const id = rt.replace(/<[^>]*>/g, '').trim().toLowerCase().replace(/\s+/g, '-')
-      const childHtml = block.children
-        ? `<div class="ml-4">${blocksToHtml(block.children)}</div>`
-        : ''
-      return `<h${level} id="${id}">${rt}</h${level}>${childHtml}`
+      const contentHtml = `<h${level} id="${id}">${rt}</h${level}>`
+      if (block.children) {
+        return renderChildrenWithSidenote(contentHtml, block.children)
+      }
+      return contentHtml
     }
     case 'code': {
       const code = renderPlainText(block.rich_text)
@@ -130,7 +151,7 @@ function blockToHtml(block: any): string {
       return `<img src="${src}" alt="${escapeHtml(alt)}" loading="lazy" />${caption}`
     }
     case 'callout': {
-      return renderSidenoteCallout(block) + renderInlineCallout(block)
+      return renderRegularCallout(block)
     }
     case 'quote': {
       const rt = renderRichText(block.rich_text)
@@ -218,12 +239,7 @@ function blocksToHtml(blocks: any[]): string {
         i++
       }
       listHtml += '</ul>'
-      if (i < blocks.length && blocks[i].type === 'callout') {
-        html += `<div class="block-with-sidenote">${renderSidenoteCallout(blocks[i])}<div class="sidenote-target">${listHtml}</div>${renderInlineCallout(blocks[i])}</div>`
-        i++
-      } else {
-        html += listHtml
-      }
+      html += listHtml
     } else if (t === 'numbered_list_item') {
       let listHtml = '<ol class="!my-2">'
       while (i < blocks.length && blocks[i].type === 'numbered_list_item') {
@@ -231,21 +247,10 @@ function blocksToHtml(blocks: any[]): string {
         i++
       }
       listHtml += '</ol>'
-      if (i < blocks.length && blocks[i].type === 'callout') {
-        html += `<div class="block-with-sidenote">${renderSidenoteCallout(blocks[i])}<div class="sidenote-target">${listHtml}</div>${renderInlineCallout(blocks[i])}</div>`
-        i++
-      } else {
-        html += listHtml
-      }
+      html += listHtml
     } else {
-      const contentHtml = blockToHtml(block)
+      html += blockToHtml(block)
       i++
-      if (i < blocks.length && blocks[i].type === 'callout') {
-        html += `<div class="block-with-sidenote">${renderSidenoteCallout(blocks[i])}<div class="sidenote-target">${contentHtml}</div>${renderInlineCallout(blocks[i])}</div>`
-        i++
-      } else {
-        html += contentHtml
-      }
     }
   }
   return html
