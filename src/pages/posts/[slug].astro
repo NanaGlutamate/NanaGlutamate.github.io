@@ -64,6 +64,17 @@ for (const block of blocks) {
     const headings = ids.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[]
     if (headings.length === 0) return
 
+    links.forEach((link, i) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault()
+        const h = headings[i]
+        if (h) {
+          history.pushState(null, '', `#${ids[i]}`)
+          h.scrollIntoView({ behavior: 'smooth' })
+        }
+      })
+    })
+
     const nav = links[0].closest('.toc-links')
     const observer = new IntersectionObserver(
       (entries) => {

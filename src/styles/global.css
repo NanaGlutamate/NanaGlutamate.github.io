@@ -350,6 +350,32 @@
     margin-top: 0;
   }
 
+  /* ── Callout box (standalone, all screen sizes) ── */
+  .callout-box {
+    background: var(--callout-bg);
+    border: 1px solid var(--callout-border);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.6rem;
+    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .callout-box-emoji {
+    font-size: 18px;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+  .callout-box p {
+    margin: 0.25rem 0;
+  }
+  .callout-box p:first-child {
+    margin-top: 0;
+  }
+
   /* ── Left sidebar (wide) + TOC ── */
   .left-sidebar {
     font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
@@ -414,7 +440,6 @@
 
 html {
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
 }
 
 /* Scrollbar */
