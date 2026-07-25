@@ -406,6 +406,10 @@
 .dark .katex { color: var(--text); }
 .dark .katex .mord { color: var(--text); }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
