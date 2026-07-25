@@ -32,12 +32,10 @@ posts.sort((a, b) => {
                 const { slug, title, date, series, tags, summary } = post.data
                 const trimmedTitle = title.trim()
                 return (
-                  <article class="p-5 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow">
-                    <a href={`/posts/${slug}`} class="block">
-                      <h2 class="text-xl font-semibold mb-2 text-[var(--text)] hover:text-[var(--accent)] transition-colors">
-                        {trimmedTitle}
-                      </h2>
-                    </a>
+                  <a href={`/posts/${slug}`} class="block p-5 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow group">
+                    <h2 class="text-xl font-semibold mb-2 text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
+                      {trimmedTitle}
+                    </h2>
 
                     {summary && (
                       <p class="text-sm text-[var(--text-secondary)] mb-3 line-clamp-2">{summary}</p>
@@ -46,9 +44,9 @@ posts.sort((a, b) => {
                     <div class="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
                       {date && <span>{formatDate(date)}</span>}
                       {series && (
-                        <a href={`/series/${series}`} class="hover:text-[var(--accent)] transition-colors">
+                        <span class="relative z-10 cursor-pointer hover:text-[var(--accent)] transition-colors" onclick={`event.stopPropagation();window.location.href='/series/${series}'`}>
                           {series}
-                        </a>
+                        </span>
                       )}
                       {tags.slice(0, 4).map((tag: { name: string; color: string }) => (
                         <span class="px-1.5 py-0.5 rounded-full bg-[var(--tag-bg)] text-[var(--tag-text)]">
@@ -56,7 +54,7 @@ posts.sort((a, b) => {
                         </span>
                       ))}
                     </div>
-                  </article>
+                  </a>
                 )
               })}
             </div>
