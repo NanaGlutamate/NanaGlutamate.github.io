@@ -14,10 +14,12 @@ interface Props {
 const { headings = [] } = Astro.props
 const currentPath = Astro.url.pathname
 
+const toyPages = import.meta.glob('/src/pages/toys/*.astro')
+
 const navItems = [
   { label: '文章', href: '/' },
   { label: '系列', href: '/series' },
-  { label: '其他', href: '/toys' },
+  ...(Object.keys(toyPages).length > 0 ? [{ label: '其他', href: '/toys' }] : []),
 ]
 ---
 
