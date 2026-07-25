@@ -414,6 +414,7 @@
 
 html {
   scrollbar-gutter: stable;
+  scroll-behavior: smooth;
 }
 
 /* Scrollbar */
