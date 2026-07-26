@@ -269,6 +269,8 @@
   }
   .prose-custom .katex-display {
     @apply my-4;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   /* ── Callouts → sidenotes ── */
@@ -526,7 +528,7 @@ html {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
