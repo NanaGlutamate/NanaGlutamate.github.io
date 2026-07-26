@@ -1,71 +1,73 @@
 {
-  "$ref": "#/definitions/posts",
-  "definitions": {
-    "posts": {
-      "type": "object",
-      "properties": {
-        "slug": {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "date": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "title": {
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "series": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "date": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "series": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "color"
-            ],
-            "additionalProperties": false
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
           }
         },
-        "status": {
-          "type": "string"
-        },
-        "summary": {
-          "type": "string"
-        },
-        "blocks": {
-          "type": "array"
-        },
-        "$schema": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "slug",
-        "title",
-        "date",
-        "series",
-        "tags",
-        "status",
-        "summary",
-        "blocks"
-      ],
-      "additionalProperties": false
+        "required": [
+          "name",
+          "color"
+        ]
+      }
+    },
+    "status": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {}
+    },
+    "$schema": {
+      "type": "string"
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "required": [
+    "slug",
+    "title",
+    "date",
+    "series",
+    "tags",
+    "status",
+    "summary",
+    "blocks"
+  ]
 }
