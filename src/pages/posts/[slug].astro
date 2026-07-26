@@ -124,9 +124,20 @@ for (const block of blocks) {
       const expr = wrapper.getAttribute('data-equation') || ''
       navigator.clipboard.writeText(expr).then(() => {
         btn.classList.add('copied')
-        setTimeout(() => {
-          btn.classList.remove('copied')
-        }, 500)
+        setTimeout(() => btn.classList.remove('copied'), 500)
+      }).catch(() => {})
+    })
+  })
+
+  // ── Code copy buttons ──
+  document.querySelectorAll('.copy-code').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const block = btn.closest('.code-block') as HTMLElement | null
+      if (!block) return
+      const code = block.getAttribute('data-code') || ''
+      navigator.clipboard.writeText(code).then(() => {
+        btn.classList.add('copied')
+        setTimeout(() => btn.classList.remove('copied'), 500)
       }).catch(() => {})
     })
   })

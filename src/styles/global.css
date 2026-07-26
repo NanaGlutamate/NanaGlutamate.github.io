@@ -227,25 +227,105 @@
   .prose-custom li > ol {
     @apply ml-5;
   }
-  .prose-custom pre {
-    @apply bg-[var(--code-bg)] rounded-md p-4 my-4 overflow-x-auto;
+  .prose-custom .code-block {
+    @apply bg-[var(--callout-bg)] rounded-md my-4;
     border: 1px solid var(--border-light);
     font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1.55;
     color: var(--code-text);
   }
+
+  .prose-custom .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+  }
+
+  .prose-custom .code-lang {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .prose-custom .copy-code {
+    @apply p-1 rounded cursor-pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    background: transparent;
+    transition: color 0.3s, background-color 0.3s, transform 0.15s;
+  }
+
+  .prose-custom .copy-code:hover {
+    @apply text-[var(--text)] bg-[var(--inline-code-bg)];
+  }
+
+  .prose-custom .copy-code:active {
+    transform: scale(0.9);
+  }
+
+  .prose-custom .copy-code.copied {
+    color: #22c55e;
+    transition: none;
+  }
+
+  .prose-custom .code-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 0 10px;
+  }
+
+  .prose-custom .code-body {
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+
+  .prose-custom .code-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .prose-custom .code-table tr {
+    height: 1.55em;
+  }
+
+  .prose-custom .code-ln {
+    @apply select-none;
+    width: 44px;
+    min-width: 44px;
+    padding: 0 14px 0 10px;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 13px;
+    white-space: pre;
+    vertical-align: top;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .prose-custom .code-lc {
+    padding: 0 10px 0 14px;
+    white-space: pre;
+    vertical-align: top;
+  }
+
   .prose-custom code {
     font-family: var(--font-mono);
     font-size: 0.9em;
   }
-  .prose-custom :not(pre) > code {
+
+  .prose-custom :not(pre) > code,
+  .prose-custom :not(.code-block) > code {
     background: var(--inline-code-bg);
     color: var(--inline-code-text);
     padding: 0.15em 0.4em;
     border-radius: 3px;
     font-size: 0.88em;
   }
+
   .prose-custom hr {
     border: none;
     border-top: 1px solid var(--divider);
@@ -266,6 +346,10 @@
   .prose-custom td {
     border-bottom: 1px solid var(--border);
     padding: 0.5rem 0.75rem;
+  }
+
+  .prose-custom .code-table td {
+    border-bottom: none;
   }
   .prose-custom .katex-display {
     @apply my-4;
