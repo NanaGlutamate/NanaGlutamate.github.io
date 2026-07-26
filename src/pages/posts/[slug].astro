@@ -114,5 +114,20 @@ for (const block of blocks) {
     )
 
     sections.forEach(s => observer.observe(s))
-  })()
+  })();
+
+  // ── Equation copy buttons ──
+  document.querySelectorAll('.copy-latex').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const wrapper = btn.closest('.equation-wrapper') as HTMLElement | null
+      if (!wrapper) return
+      const expr = wrapper.getAttribute('data-equation') || ''
+      navigator.clipboard.writeText(expr).then(() => {
+        btn.classList.add('copied')
+        setTimeout(() => {
+          btn.classList.remove('copied')
+        }, 500)
+      }).catch(() => {})
+    })
+  })
 </script>

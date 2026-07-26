@@ -273,6 +273,44 @@
     overflow-y: hidden;
   }
 
+  /* ── Equation copy button ── */
+  .equation-wrapper {
+    @apply relative;
+  }
+
+  .equation-wrapper .copy-latex {
+    @apply absolute right-2 opacity-0;
+    top: 50%;
+    margin-top: -14px;
+    @apply p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400;
+    @apply border border-gray-200 dark:border-gray-700 cursor-pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, color 0.3s, background-color 0.3s, border-color 0.3s, transform 0.15s;
+  }
+
+  .equation-wrapper:hover .copy-latex {
+    @apply opacity-100;
+  }
+
+  .equation-wrapper .copy-latex:hover {
+    @apply text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700;
+  }
+
+  .equation-wrapper .copy-latex svg {
+    pointer-events: none;
+  }
+
+  .equation-wrapper .copy-latex:active {
+    transform: scale(0.9);
+  }
+
+  .equation-wrapper .copy-latex.copied {
+    @apply text-green-500 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700;
+    transition: none;
+  }
+
   /* ── Callouts → sidenotes ── */
   .block-with-sidenote {
   }
