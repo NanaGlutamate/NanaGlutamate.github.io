@@ -14,7 +14,7 @@ sys.path.insert(0, str(NOTION_BACKUP))
 _original_cwd = os.getcwd()
 os.chdir(str(NOTION_BACKUP))
 try:
-    from toolkit.notionlib2 import PageCache, ID, TYPE, CHILDREN, CHILD_PAGE, CHILD_DATABASE, DATA
+    from toolkit.notionlib3 import PageCache, ID, TYPE, CHILDREN, CHILD_PAGE, CHILD_DATABASE, DATA
 finally:
     os.chdir(_original_cwd)
 
@@ -90,7 +90,7 @@ def handle_media_block(block, cache):
 
     raw_bytes = cache._raw_storage.get(block_key)
     if raw_bytes:
-        dest_name = _find_raw_filename(block_key, NOTION_BACKUP / '.notion-cache' / '_raw')
+        dest_name = _find_raw_filename(block_key, NOTION_BACKUP / '.notion-cache' / 'raw')
         if not dest_name:
             return None
         dest_path = PUBLIC_RAW / dest_name
