@@ -96,6 +96,9 @@ function renderChildrenWithSidenote(parentHtml: string, children: any[]): string
   return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target">${parentHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>` + restHtml
 }
 
+let hCounter = 0
+let currentSectionId = ''
+
 function blockToHtml(block: any): string {
   const { type } = block
 
@@ -118,7 +121,8 @@ function blockToHtml(block: any): string {
       const level = parseInt(type.split('_')[1])
       const rt = renderRichText(block.rich_text)
       if (!rt) return ''
-      const id = rt.replace(/<[^>]*>/g, '').trim().toLowerCase().replace(/\s+/g, '-')
+      hCounter++
+      const id = `h-${hCounter}`
       const contentHtml = `<h${level} id="${id}">${rt}</h${level}>`
       if (block.children) {
         return renderChildrenWithSidenote(contentHtml, block.children)
@@ -228,14 +232,22 @@ function blockToHtml(block: any): string {
   }
 }
 
-function blocksToHtml(blocks: any[]): string {
+function blocksToHtml(blocks: any[], wrapSections = false): string {
   let html = ''
   let i = 0
   while (i < blocks.length) {
     const block = blocks[i]
     const t = block.type
 
-    if (t === 'bulleted_list_item') {
+    if (wrapSections && (t === 'heading_1' || t === 'heading_2' || t === 'heading_3')) {
+      if (currentSectionId) html += '</div>'
+      const headingHtml = blockToHtml(block)
+      i++
+      const match = headingHtml.match(/id="(h-\d+)"/)
+      currentSectionId = match ? match[1] : ''
+      html += headingHtml
+      if (currentSectionId) html += `<div data-section="${currentSectionId}">`
+    } else if (t === 'bulleted_list_item') {
       let listHtml = '<ul class="!my-2">'
       while (i < blocks.length && blocks[i].type === 'bulleted_list_item') {
         listHtml += blockToHtml(blocks[i])
@@ -256,8 +268,9 @@ function blocksToHtml(blocks: any[]): string {
       i++
     }
   }
+  if (wrapSections && currentSectionId) html += '</div>'
   return html
 }
 ---
 
-<Fragment set:html={blocksToHtml(blocks)} />
+<Fragment set:html={blocksToHtml(blocks, true)} />

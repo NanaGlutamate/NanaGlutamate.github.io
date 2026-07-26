@@ -24,14 +24,16 @@ const { title: rawTitle, date, series, tags, summary, blocks } = post.data
 const title = rawTitle.trim()
 
 const headings: HeadingItem[] = []
+let hCounter = 0
 for (const block of blocks) {
   if (block.type === 'heading_1' || block.type === 'heading_2' || block.type === 'heading_3') {
     const text = (block.rich_text || []).map((rt: any) => rt.plain_text || '').join('')
     if (text) {
+      hCounter++
       headings.push({
         depth: parseInt(block.type.split('_')[1]),
         text,
-        id: text.toLowerCase().replace(/\s+/g, '-'),
+        id: `h-${hCounter}`,
       })
     }
   }
@@ -61,13 +63,15 @@ for (const block of blocks) {
     if (links.length === 0) return
 
     const ids = Array.from(links).map(a => a.getAttribute('href')!.slice(1))
-    const headings = ids.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[]
-    if (headings.length === 0) return
+    const headingMap = new Map<string, number>()
+    ids.forEach((id, i) => headingMap.set(id, i))
+
+    const headingEls = ids.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[]
 
     links.forEach((link, i) => {
       link.addEventListener('click', (e) => {
         e.preventDefault()
-        const h = headings[i]
+        const h = headingEls[i]
         if (h) {
           history.pushState(null, '', `#${ids[i]}`)
           h.scrollIntoView({ behavior: 'smooth' })
@@ -76,28 +80,39 @@ for (const block of blocks) {
     })
 
     const nav = links[0].closest('.toc-links')
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const idx = headings.indexOf(entry.target as HTMLElement)
-            if (idx === -1) continue
-            links.forEach(l => l.classList.remove('active'))
-            const active = links[idx] as HTMLElement
-            active.classList.add('active')
-            if (nav) {
-              const navRect = nav.getBoundingClientRect()
-              const linkRect = active.getBoundingClientRect()
-              if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
-                active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-              }
-            }
+    const sections = document.querySelectorAll('[data-section]')
+
+    function refreshActive() {
+      let bestId: string | null = null
+      let bestTop = Infinity
+      for (const section of sections) {
+        const rect = section.getBoundingClientRect()
+        if (rect.bottom <= 0) continue
+        if (rect.top < bestTop) {
+          bestTop = rect.top
+          bestId = section.getAttribute('data-section')
+        }
+      }
+      links.forEach(l => l.classList.remove('active'))
+      if (bestId && headingMap.has(bestId)) {
+        const idx = headingMap.get(bestId)!
+        const active = links[idx] as HTMLElement
+        active.classList.add('active')
+        if (nav) {
+          const navRect = nav.getBoundingClientRect()
+          const linkRect = active.getBoundingClientRect()
+          if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
+            active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
           }
         }
-      },
-      { rootMargin: '0px 0px -70% 0px', threshold: 0 }
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      () => refreshActive(),
+      { rootMargin: '0px 0px -60% 0px', threshold: 0 }
     )
 
-    headings.forEach(h => observer.observe(h))
+    sections.forEach(s => observer.observe(s))
   })()
 </script>
