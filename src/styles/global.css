@@ -163,7 +163,7 @@
   /* ── Article / prose ── */
   .prose-custom {
     @apply text-[var(--text)] leading-relaxed;
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
     font-size: var(--fs-base);
     line-height: 1.8;
   }
@@ -425,6 +425,11 @@
   }
   .prose-custom details.toggle-block > .toggle-content {
     @apply px-4 pb-3;
+  }
+
+  /* ── Child blocks indentation ── */
+  .prose-custom .child-blocks {
+    padding-left: 2rem;
   }
 
   /* ── Bookmark card ── */

@@ -60,7 +60,7 @@ function renderRegularCallout(block: any): string {
   const emoji = block.emoji || '💡'
   const rt = renderRichText(block.rich_text)
   const childHtml = block.children
-    ? `<div class="mt-1.5">${blocksToHtml(block.children)}</div>`
+    ? `<div class="child-blocks mt-1.5">${blocksToHtml(block.children)}</div>`
     : ''
   return `<div class="callout-box"><span class="callout-box-emoji">${emoji}</span><div class="flex-1 min-w-0">${rt}${childHtml}</div></div>`
 }
@@ -69,7 +69,7 @@ function renderSidenoteCallout(block: any): string {
   const emoji = block.emoji || '💡'
   const rt = renderRichText(block.rich_text)
   const childHtml = block.children
-    ? blocksToHtml(block.children)
+    ? `<div class="child-blocks">${blocksToHtml(block.children)}</div>`
     : ''
   return `<aside class="sidenote hidden xl:block"><span class="sidenote-emoji">${emoji}</span>${rt}${childHtml}</aside>`
 }
@@ -78,7 +78,7 @@ function renderInlineCallout(block: any): string {
   const emoji = block.emoji || '💡'
   const rt = renderRichText(block.rich_text)
   const childHtml = block.children
-    ? `<div class="mt-1.5">${blocksToHtml(block.children)}</div>`
+    ? `<div class="child-blocks mt-1.5">${blocksToHtml(block.children)}</div>`
     : ''
   return `<div class="callout-inline xl:hidden"><span class="sidenote-emoji">${emoji}</span><div class="flex-1 min-w-0">${rt}${childHtml}</div></div>`
 }
@@ -86,11 +86,14 @@ function renderInlineCallout(block: any): string {
 function renderChildrenWithSidenote(parentHtml: string, children: any[]): string {
   if (!children || children.length === 0) return parentHtml
   if (children[0]?.type !== 'callout') {
-    return parentHtml + blocksToHtml(children)
+    return parentHtml + `<div class="child-blocks">${blocksToHtml(children)}</div>`
   }
   const sidenoteCallout = children[0]
   const restChildren = children.slice(1)
-  return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target">${parentHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>` + blocksToHtml(restChildren)
+  const restHtml = restChildren.length > 0
+    ? `<div class="child-blocks">${blocksToHtml(restChildren)}</div>`
+    : ''
+  return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target">${parentHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>` + restHtml
 }
 
 function blockToHtml(block: any): string {
@@ -156,7 +159,7 @@ function blockToHtml(block: any): string {
     case 'quote': {
       const rt = renderRichText(block.rich_text)
       const childHtml = block.children
-        ? blocksToHtml(block.children)
+        ? `<div class="child-blocks">${blocksToHtml(block.children)}</div>`
         : ''
       return `<blockquote>${rt}${childHtml}</blockquote>`
     }
@@ -198,7 +201,7 @@ function blockToHtml(block: any): string {
       const checked = block.checked ? 'checked' : ''
       const rt = renderRichText(block.rich_text)
       const childHtml = block.children
-        ? `<div class="ml-8">${blocksToHtml(block.children)}</div>`
+        ? `<div class="child-blocks">${blocksToHtml(block.children)}</div>`
         : ''
       return `<div class="flex items-center gap-2 my-1"><input type="checkbox" ${checked} disabled class="rounded" /><span class="${block.checked ? 'line-through text-[var(--text-muted)]' : ''}">${rt}</span></div>${childHtml}`
     }
