@@ -35,35 +35,34 @@ const posts = allPosts
       <div class="flex-1 min-w-0 px-4 xl:px-10 py-8">
         <div class="max-w-[680px] mx-auto xl:mx-0">
           <div class="mb-8">
-            <a href="/series" class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+            <a href="/series" class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors" style="font-family: var(--font-sans)">
               &larr; 所有系列
             </a>
-            <h1 class="text-2xl font-bold mt-2 text-[var(--text)]">{name}</h1>
-            <p class="text-sm text-[var(--text-muted)] mt-1">{posts.length} 篇文章</p>
+            <h1 class="text-2xl font-bold mt-2 text-[var(--text)]" style="font-family: var(--font-sans)">{name}</h1>
+            <p class="text-sm text-[var(--text-muted)] mt-1" style="font-family: var(--font-sans)">{posts.length} 篇文章</p>
           </div>
 
-          <div class="space-y-4">
-            {posts.map((post) => (
-              <a
-                href={`/posts/${post.data.slug}`}
-                class="block p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow"
-              >
-                <h2 class="font-semibold text-[var(--text)] hover:text-[var(--accent)] transition-colors">
-                  {post.data.title.trim()}
-                </h2>
-                <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--text-muted)]">
-                  {post.data.date && <span>{formatDate(post.data.date, 'long')}</span>}
-                  {post.data.tags.map((tag: { name: string; color: string }) => (
-                    <span class="px-1.5 py-0.5 rounded-full bg-[var(--tag-bg)] text-[var(--tag-text)]">
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-                {post.data.summary && (
-                  <p class="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">{post.data.summary}</p>
-                )}
-              </a>
-            ))}
+          <div>
+            {posts.map((post) => {
+              const metaParts: string[] = []
+              if (post.data.date) metaParts.push(formatDate(post.data.date, 'long'))
+              post.data.tags.slice(0, 4).forEach((tag: { name: string }) => metaParts.push(tag.name))
+              return (
+                <a href={`/posts/${post.data.slug}`} class="post-card">
+                  <h2 class="post-card-title">{post.data.title.trim()}</h2>
+                  {metaParts.length > 0 && (
+                    <div class="post-card-meta">
+                      {metaParts.map((part, i) => (
+                        <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{part}</span></>
+                      ))}
+                    </div>
+                  )}
+                  {post.data.summary && (
+                    <p class="post-card-summary line-clamp-2">{post.data.summary}</p>
+                  )}
+                </a>
+              )
+            })}
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ posts.sort((a, b) => {
 
       <div class="flex-1 min-w-0 px-4 xl:px-10 py-8">
         <div class="max-w-[680px] mx-auto xl:mx-0">
-          <h1 class="text-2xl font-bold mb-8 text-[var(--text)]">最新文章</h1>
+          <h1 class="text-2xl font-bold mb-8 text-[var(--text)]" style="font-family: var(--font-sans)">最新文章</h1>
 
           {posts.length === 0 ? (
             <div class="text-center py-16 text-[var(--text-muted)]">
@@ -27,33 +27,26 @@ posts.sort((a, b) => {
               <p class="text-sm">运行 <code class="bg-[var(--code-bg)] px-1.5 py-0.5 rounded">npm run fetch</code> 来从 Notion 拉取文章</p>
             </div>
           ) : (
-            <div class="space-y-6">
+            <div>
               {posts.map((post) => {
                 const { slug, title, date, series, tags, summary } = post.data
-                const trimmedTitle = title.trim()
+                const metaParts: string[] = []
+                if (date) metaParts.push(formatDate(date))
+                if (series) metaParts.push(series)
+                tags.slice(0, 4).forEach((tag: { name: string }) => metaParts.push(tag.name))
                 return (
-                  <a href={`/posts/${slug}`} class="block p-5 rounded-xl bg-[var(--card-bg)] border border-[var(--border)] hover:shadow-md transition-shadow group">
-                    <h2 class="text-xl font-semibold mb-2 text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
-                      {trimmedTitle}
-                    </h2>
-
-                    {summary && (
-                      <p class="text-sm text-[var(--text-secondary)] mb-3 line-clamp-2">{summary}</p>
+                  <a href={`/posts/${slug}`} class="post-card">
+                    <h2 class="post-card-title">{title.trim()}</h2>
+                    {metaParts.length > 0 && (
+                      <div class="post-card-meta">
+                        {metaParts.map((part, i) => (
+                          <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{part}</span></>
+                        ))}
+                      </div>
                     )}
-
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
-                      {date && <span>{formatDate(date)}</span>}
-                      {series && (
-                        <span class="relative z-10 cursor-pointer hover:text-[var(--accent)] transition-colors" onclick={`event.stopPropagation();window.location.href='/series/${series}'`}>
-                          {series}
-                        </span>
-                      )}
-                      {tags.slice(0, 4).map((tag: { name: string; color: string }) => (
-                        <span class="px-1.5 py-0.5 rounded-full bg-[var(--tag-bg)] text-[var(--tag-text)]">
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
+                    {summary && (
+                      <p class="post-card-summary line-clamp-2">{summary}</p>
+                    )}
                   </a>
                 )
               })}

@@ -6,6 +6,15 @@
 
 @layer base {
   :root {
+    --font-serif: 'Noto Serif SC', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Maple Mono', 'Source Code Pro', 'Fira Code', Consolas, Monaco, monospace;
+    --fs-xs: 0.75rem;
+    --fs-sm: 0.875rem;
+    --fs-base: 1.0625rem;
+    --fs-lg: 1.125rem;
+    --fs-xl: 1.25rem;
+    --fs-2xl: 1.5rem;
     --navbar-height: 3.5rem;
     --bg: #ffffff;
     --text: #222222;
@@ -15,8 +24,7 @@
     --accent-hover: #0c5a80;
     --border: #dee9ed;
     --border-light: #eef2f5;
-    --card-bg: #ffffff;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    --card-bg: #fafbfc;
     --code-bg: #faf8f5;
     --code-text: #595959;
     --inline-code-bg: #f3f0ec;
@@ -52,8 +60,7 @@
     --accent-hover: #93bbfd;
     --border: #2d323b;
     --border-light: #252930;
-    --card-bg: #23272e;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --card-bg: #1e2127;
     --code-bg: #1e2127;
     --code-text: #b0b0b0;
     --inline-code-bg: #2a2d35;
@@ -84,8 +91,8 @@
 @layer base {
   body {
     @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-200;
-    font-family: 'Noto Serif SC', 'Source Serif 4', Georgia, 'Times New Roman', serif;
-    font-size: 17px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
     line-height: 1.75;
     -webkit-font-smoothing: antialiased;
   }
@@ -94,7 +101,7 @@
 @layer components {
   /* ── Navigation sidebar (left) ── */
   .nav-sidebar {
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     background: var(--nav-bg);
     color: var(--nav-text);
     font-size: 15px;
@@ -150,20 +157,20 @@
 
   /* ── Top navbar (narrow screens only) ── */
   .top-nav {
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
   }
 
   /* ── Article / prose ── */
   .prose-custom {
     @apply text-[var(--text)] leading-relaxed;
-    font-family: 'Noto Serif SC', 'Source Serif 4', Georgia, 'Times New Roman', serif;
-    font-size: 17px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
     line-height: 1.8;
   }
   .prose-custom h1,
   .prose-custom h2,
   .prose-custom h3 {
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     color: var(--text);
     line-height: 1.35;
   }
@@ -223,13 +230,13 @@
   .prose-custom pre {
     @apply bg-[var(--code-bg)] rounded-md p-4 my-4 overflow-x-auto;
     border: 1px solid var(--border-light);
-    font-family: 'Maple Mono', 'Source Code Pro', 'Fira Code', Consolas, Monaco, monospace;
+    font-family: var(--font-mono);
     font-size: 14px;
     line-height: 1.55;
     color: var(--code-text);
   }
   .prose-custom code {
-    font-family: 'Maple Mono', 'Source Code Pro', 'Fira Code', Consolas, Monaco, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9em;
   }
   .prose-custom :not(pre) > code {
@@ -269,7 +276,7 @@
   }
 
   .sidenote {
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     line-height: 1.55;
     color: var(--sidenote-text);
@@ -333,7 +340,7 @@
     margin: 1rem 0;
     display: flex;
     gap: 0.6rem;
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.6;
     color: var(--text-secondary);
@@ -359,7 +366,7 @@
     margin: 1rem 0;
     display: flex;
     gap: 0.6rem;
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.6;
     color: var(--text-secondary);
@@ -378,7 +385,7 @@
 
   /* ── Left sidebar (wide) + TOC ── */
   .left-sidebar {
-    font-family: 'Source Sans 3', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
   }
   .left-sidebar .toc-link {
     display: block;
@@ -431,6 +438,77 @@
   }
   .prose-custom .column {
     @apply flex-1;
+  }
+
+  /* ── Post list cards ── */
+  .post-card {
+    display: block;
+    padding: 1.125rem 0;
+    border-bottom: 1px solid var(--border-light);
+    text-decoration: none;
+  }
+  .post-card:last-child {
+    border-bottom: none;
+  }
+  .post-card:hover .post-card-title {
+    color: var(--accent);
+  }
+  .post-card-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    transition: color 0.2s ease;
+  }
+  .post-card-meta {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    margin-top: 0.375rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .post-card-meta-sep {
+    color: var(--border);
+  }
+  .post-card-summary {
+    font-family: var(--font-serif);
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  /* ── Series list cards ── */
+  .series-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+    text-decoration: none;
+  }
+  .series-card:last-child {
+    border-bottom: none;
+  }
+  .series-card:hover .series-card-title {
+    color: var(--accent);
+  }
+  .series-card-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--text);
+    transition: color 0.2s ease;
+  }
+  .series-card-date {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    flex-shrink: 0;
   }
 }
 
