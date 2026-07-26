@@ -44,6 +44,9 @@ jobs:
         run: pip install notion_client requests
 
       - name: Fetch Notion posts
+        env:
+          RELEASE_DATABASE_ID: ${{ secrets.RELEASE_DATABASE_ID }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         run: python scripts/fetch-posts.py
 
       - name: Setup Node

@@ -31,6 +31,10 @@ def _load_env():
                         k, v = line.split('=', 1)
                         env[k.strip()] = v.strip()
 
+    for key in ('NOTION_TOKEN', 'RELEASE_DATABASE_ID'):
+        if key not in env and key in os.environ:
+            env[key] = os.environ[key]
+
     config_json = NOTION_BACKUP / 'config.json'
     if config_json.exists() and 'NOTION_TOKEN' not in env:
         with open(config_json, 'r', encoding='utf-8') as f:
