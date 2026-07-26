@@ -13,6 +13,7 @@ interface Props {
 
 const { headings = [] } = Astro.props
 const currentPath = Astro.url.pathname
+const minDepth = headings.length > 0 ? Math.min(...headings.map(h => h.depth)) : 1
 
 const toyPages = import.meta.glob('/src/pages/toys/*.astro')
 
@@ -69,7 +70,7 @@ const navItems = [
         <a
           href={`#${h.id}`}
           data-toc-link={i}
-          class={`toc-link ${h.depth === 1 ? 'toc-depth-0' : h.depth === 2 ? 'toc-depth-1' : 'toc-depth-2'}`}
+          class={`toc-link toc-depth-${h.depth - minDepth}`}
         >
           {h.text}
         </a>

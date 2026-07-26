@@ -11,6 +11,7 @@ interface Props {
 
 const { headings } = Astro.props
 const showSidebar = headings.length > 0
+const minDepth = headings.length > 0 ? Math.min(...headings.map(h => h.depth)) : 1
 ---
 
 {showSidebar && (
@@ -26,9 +27,9 @@ const showSidebar = headings.length > 0
               href={`#${h.id}`}
               data-toc-link={i}
               class={`block py-1 pl-3 pr-2 text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors border-l-2 -ml-px ${
-                h.depth === 1
+                h.depth === minDepth
                   ? 'font-medium'
-                  : h.depth === 2
+                  : h.depth === minDepth + 1
                     ? 'pl-6'
                     : 'pl-9'
               } border-transparent hover:border-[var(--accent)]`}
