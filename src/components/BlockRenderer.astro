@@ -93,7 +93,7 @@ function renderChildrenWithSidenote(parentHtml: string, children: any[]): string
   const restHtml = restChildren.length > 0
     ? `<div class="child-blocks">${blocksToHtml(restChildren)}</div>`
     : ''
-  return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target">${parentHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>` + restHtml
+  return `<div class="block-with-sidenote">${renderSidenoteCallout(sidenoteCallout)}<div class="sidenote-target-group">${parentHtml}${restHtml}</div>${renderInlineCallout(sidenoteCallout)}</div>`
 }
 
 let hCounter = 0

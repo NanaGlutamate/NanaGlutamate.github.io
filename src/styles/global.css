@@ -372,6 +372,9 @@
   .prose-custom > hr:first-child {
     display: none;
   }
+  .prose-custom hr + hr {
+    display: none;
+  }
   .prose-custom hr {
     border: none;
     border-top: 1px solid var(--divider);
@@ -469,14 +472,14 @@
       border-top: 1px solid var(--sidenote-border);
       pointer-events: auto;
     }
-    .block-with-sidenote:hover .sidenote-target {
+    .block-with-sidenote:has(.sidenote:hover) .sidenote-target-group {
       background: rgba(20, 129, 184, 0.05);
       border-radius: 4px;
       transition: background 0.15s ease;
     }
   }
 
-  .dark .block-with-sidenote:hover .sidenote-target {
+  .dark .block-with-sidenote:has(.sidenote:hover) .sidenote-target-group {
     background: rgba(96, 165, 250, 0.06);
   }
   .sidenote p {
