@@ -355,6 +355,7 @@
     @apply my-4;
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-gutter: stable;
   }
 
   /* ── Equation copy button ── */
