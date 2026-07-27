@@ -142,12 +142,13 @@ for (const block of blocks) {
     })
   })
 
-  // ── Mermaid toggle & render ──
+  // ── Mermaid render & toggle ──
   const mermaidBlocks = document.querySelectorAll('.mermaid-block')
   if (mermaidBlocks.length > 0) {
-    import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs').then((mermaid) => {
+    import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs').then(async (mermaid) => {
       mermaid.default.initialize({ startOnLoad: false, theme: 'default' })
-      void mermaid.default.run({ querySelector: '.mermaid' })
+      await mermaid.default.run({ querySelector: '.mermaid' })
+      document.querySelectorAll('.mermaid-render').forEach(el => el.classList.add('ready'))
 
       document.querySelectorAll('.toggle-mermaid').forEach(btn => {
         btn.addEventListener('click', () => {

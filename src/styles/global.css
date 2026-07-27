@@ -344,18 +344,19 @@
     transform: scale(0.9);
   }
 
+  .prose-custom .mermaid-render:not(.ready) {
+    visibility: hidden;
+  }
+
   .prose-custom .mermaid-render {
     padding: 16px 10px;
     overflow-x: auto;
+    min-height: 80px;
   }
 
-  .prose-custom .mermaid-render .mermaid {
-    display: block;
-    width: 100%;
-  }
-
-  .prose-custom .mermaid-render .mermaid svg {
-    width: 100%;
+  .prose-custom .mermaid-render svg {
+    width: auto;
+    max-width: 100%;
     height: auto;
   }
 
