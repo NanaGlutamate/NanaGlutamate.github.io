@@ -91,7 +91,7 @@
 @layer base {
   body {
     @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-200;
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
     font-size: var(--fs-base);
     line-height: 1.75;
     -webkit-font-smoothing: antialiased;
@@ -158,6 +158,9 @@
   /* ── Top navbar (narrow screens only) ── */
   .top-nav {
     font-family: var(--font-sans);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
   }
 
   /* ── Article / prose ── */
@@ -353,14 +356,13 @@
   }
   .prose-custom .katex-display {
     @apply my-4;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-gutter: stable;
+    overflow: visible;
   }
 
   /* ── Equation copy button ── */
   .equation-wrapper {
     @apply relative;
+    overflow-x: auto;
   }
 
   .equation-wrapper .copy-latex {
@@ -605,7 +607,7 @@
     color: var(--border);
   }
   .post-card-summary {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
     font-size: var(--fs-sm);
     color: var(--text-secondary);
     margin-top: 0.5rem;

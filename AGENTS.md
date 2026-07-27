@@ -16,3 +16,7 @@ Notion API → NotionBackup (.notion-cache/) → assemble_page() → Astro 构�
 
 2. **禁止修改 `NotionBackup/` 下的任何代码。**
    - `NotionBackup` 是上游数据层。所有修改应在 `scripts/` 或 `src/` 中进行。
+
+## 工作流
+
+每次修改后跑一次构建
