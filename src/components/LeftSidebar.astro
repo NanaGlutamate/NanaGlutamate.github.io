@@ -26,8 +26,9 @@ const navItems = [
 
 <aside class="left-sidebar hidden xl:flex flex-col w-[240px] flex-shrink-0 h-screen sticky top-0 bg-[var(--sidebar-bg)] border-r border-[var(--border)]">
   <div class="flex-shrink-0 px-5 pt-8 pb-4">
-    <a href="/" class="block mb-8">
-      <span class="text-xl font-bold text-[var(--text)] hover:text-[var(--accent)] transition-colors">HomePage</span>
+    <a href="/" class="flex items-center gap-2 px-2 mb-8 text-[var(--text)] hover:text-[var(--accent)] transition-colors">
+      <img src="/favicon.png" alt="avatar" class="w-6 h-6 rounded-full" />
+      <span class="text-base font-medium">NanaGlutamate</span>
     </a>
 
     <nav class="mb-6 space-y-0.5">
@@ -50,7 +51,7 @@ const navItems = [
       })}
     </nav>
 
-    <div class="px-2">
+    <div>
       <ThemeToggle />
     </div>
 
