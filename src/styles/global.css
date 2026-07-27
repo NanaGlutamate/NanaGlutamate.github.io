@@ -108,6 +108,21 @@
       linear-gradient(90deg, rgba(127, 127, 127, 0.07) 1px, transparent 1px);
     background-size: 12px 12px;
   }
+
+  ::view-transition-new(root) {
+    clip-path: circle(0 at var(--tx, 50%) var(--ty, 50%));
+    animation: theme-reveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  ::view-transition-old(root) {
+    animation: none;
+  }
+
+  @keyframes theme-reveal {
+    to {
+      clip-path: circle(150vmax at var(--tx, 50%) var(--ty, 50%));
+    }
+  }
 }
 
 @layer components {

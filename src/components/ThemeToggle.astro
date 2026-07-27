@@ -25,8 +25,21 @@
 <script>
   document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark')
-      localStorage.setItem('theme', isDark ? 'dark' : 'light')
+      const html = document.documentElement
+      const toDark = !html.classList.contains('dark')
+      const rect = btn.getBoundingClientRect()
+      html.style.setProperty('--tx', `${rect.left + rect.width / 2}px`)
+      html.style.setProperty('--ty', `${rect.top + rect.height / 2}px`)
+
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          html.classList.toggle('dark')
+          localStorage.setItem('theme', toDark ? 'dark' : 'light')
+        })
+      } else {
+        html.classList.toggle('dark')
+        localStorage.setItem('theme', toDark ? 'dark' : 'light')
+      }
     })
   })
 </script>
