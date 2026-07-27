@@ -329,6 +329,9 @@
     font-size: 0.88em;
   }
 
+  .prose-custom > hr:first-child {
+    display: none;
+  }
   .prose-custom hr {
     border: none;
     border-top: 1px solid var(--divider);
@@ -362,6 +365,9 @@
   /* ── Equation copy button ── */
   .equation-wrapper {
     @apply relative;
+  }
+
+  .equation-scroll {
     overflow-x: auto;
   }
 
