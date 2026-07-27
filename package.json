@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "python scripts/download-avatar.py && astro build",
+    "build:denoise": "node scripts/build-denoise.mjs",
     "preview": "astro preview",
     "fetch": "python scripts/fetch-posts.py",
     "build:debug": "node -e \"process.env.BLOG_INCLUDE_TEST='true';require('child_process').execSync('astro build',{stdio:'inherit'})\"",

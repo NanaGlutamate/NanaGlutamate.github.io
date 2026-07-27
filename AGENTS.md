@@ -19,4 +19,7 @@ Notion API → NotionBackup (.notion-cache/) → assemble_page() → Astro 构�
 
 ## 工作流
 
-每次修改后跑一次构建
+每次修改后跑一次构建：
+```bash
+npm run build:denoise
+```
