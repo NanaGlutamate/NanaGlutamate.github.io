@@ -134,3 +134,4 @@ dist
 **/__pycache__
 .notion_out
 public/raw
+public/favicon.png
