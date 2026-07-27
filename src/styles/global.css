@@ -93,7 +93,7 @@
     @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-200;
     font-family: var(--font-sans);
     font-size: var(--fs-base);
-    line-height: 1.75;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -209,7 +209,7 @@
     @apply text-[var(--text)] leading-relaxed;
     font-family: var(--font-sans);
     font-size: var(--fs-base);
-    line-height: 1.8;
+    line-height: 1.65;
   }
 
   .prose-custom h1,
@@ -223,15 +223,15 @@
   .prose-custom h1 {
     font-size: 2.25rem;
     font-weight: 700;
-    margin-top: 2.5rem;
-    margin-bottom: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 0.25rem;
   }
 
   .prose-custom h2 {
     font-size: 1.65rem;
     font-weight: 600;
-    margin-top: 2.25rem;
-    margin-bottom: 0.75rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.25rem;
     padding-bottom: 0.3rem;
     border-bottom: 1px solid var(--border);
   }
@@ -239,12 +239,24 @@
   .prose-custom h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-top: 1.75rem;
-    margin-bottom: 0.5rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .prose-custom h1 + p,
+  .prose-custom h2 + p,
+  .prose-custom h3 + p,
+  .prose-custom h1 + ul,
+  .prose-custom h2 + ul,
+  .prose-custom h3 + ul,
+  .prose-custom h1 + ol,
+  .prose-custom h2 + ol,
+  .prose-custom h3 + ol {
+    margin-top: 0.25rem;
   }
 
   .prose-custom p {
-    margin: 1.25rem 0;
+    margin: 0.75rem 0;
   }
 
   .prose-custom a {
@@ -261,7 +273,7 @@
   .prose-custom blockquote {
     border-left: 3px solid var(--blockquote-border);
     padding: 0.25rem 0 0.25rem 1.25rem;
-    margin: 1.5rem 0;
+    margin: 1.25rem 0;
     color: var(--blockquote-text);
     font-style: italic;
     quotes: none;
@@ -272,20 +284,20 @@
   }
 
   .prose-custom ul {
-    @apply list-disc list-inside my-4 space-y-0.5;
+    @apply list-disc list-inside my-3 space-y-3;
   }
 
   .prose-custom ol {
-    @apply list-decimal list-inside my-4 space-y-0.5;
+    @apply list-decimal list-inside my-3 space-y-3;
   }
 
   .prose-custom li>ul,
   .prose-custom li>ol {
-    @apply ml-5;
+    @apply ml-5 my-3;
   }
 
   .prose-custom .code-block {
-    @apply bg-[var(--callout-bg)] rounded-md my-4;
+    @apply bg-[var(--callout-bg)] rounded-md my-5;
     border: 1px solid var(--border-light);
     font-family: var(--font-mono);
     font-size: 14px;
@@ -438,11 +450,11 @@
   }
 
   .prose-custom img {
-    @apply rounded-md max-w-full my-4;
+    @apply rounded-md max-w-full my-5;
   }
 
   .prose-custom table {
-    @apply w-full border-collapse my-4;
+    @apply w-full border-collapse my-5;
     font-size: 0.9em;
   }
 
@@ -462,13 +474,12 @@
   }
 
   .prose-custom .katex-display {
-    @apply my-4;
     overflow: visible;
   }
 
   /* ── Equation copy button ── */
   .equation-wrapper {
-    @apply relative;
+    @apply my-5 relative;
   }
 
   .equation-scroll {

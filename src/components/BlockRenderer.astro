@@ -182,14 +182,14 @@ function blockToHtml(block: any): string {
     case 'bulleted_list_item': {
       const rt = renderRichText(block.rich_text)
       const childHtml = block.children
-        ? `<ul class="!my-1">${blocksToHtml(block.children)}</ul>`
+        ? `<ul>${blocksToHtml(block.children)}</ul>`
         : ''
       return `<li>${rt}${childHtml}</li>`
     }
     case 'numbered_list_item': {
       const rt = renderRichText(block.rich_text)
       const childHtml = block.children
-        ? `<ol class="!my-1">${blocksToHtml(block.children)}</ol>`
+        ? `<ol>${blocksToHtml(block.children)}</ol>`
         : ''
       return `<li>${rt}${childHtml}</li>`
     }
@@ -260,7 +260,7 @@ function blocksToHtml(blocks: any[], wrapSections = false): string {
       html += headingHtml
       if (currentSectionId) html += `<div data-section="${currentSectionId}">`
     } else if (t === 'bulleted_list_item') {
-      let listHtml = '<ul class="!my-2">'
+      let listHtml = '<ul>'
       while (i < blocks.length && blocks[i].type === 'bulleted_list_item') {
         listHtml += blockToHtml(blocks[i])
         i++
@@ -268,7 +268,7 @@ function blocksToHtml(blocks: any[], wrapSections = false): string {
       listHtml += '</ul>'
       html += listHtml
     } else if (t === 'numbered_list_item') {
-      let listHtml = '<ol class="!my-2">'
+      let listHtml = '<ol>'
       while (i < blocks.length && blocks[i].type === 'numbered_list_item') {
         listHtml += blockToHtml(blocks[i])
         i++
