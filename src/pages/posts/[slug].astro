@@ -141,4 +141,39 @@ for (const block of blocks) {
       }).catch(() => {})
     })
   })
+
+  // ── Mermaid toggle & render ──
+  const mermaidBlocks = document.querySelectorAll('.mermaid-block')
+  if (mermaidBlocks.length > 0) {
+    import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs').then((mermaid) => {
+      mermaid.default.initialize({ startOnLoad: false, theme: 'default' })
+      void mermaid.default.run({ querySelector: '.mermaid' })
+
+      document.querySelectorAll('.toggle-mermaid').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const block = btn.closest('.mermaid-block') as HTMLElement | null
+          if (!block) return
+          const renderView = block.querySelector('.mermaid-render') as HTMLElement | null
+          const codeView = block.querySelector('.code-body') as HTMLElement | null
+          const iconCode = btn.querySelector('.toggle-icon-code') as HTMLElement | null
+          const iconChart = btn.querySelector('.toggle-icon-chart') as HTMLElement | null
+          if (!renderView || !codeView) return
+
+          if (renderView.style.display !== 'none') {
+            renderView.style.display = 'none'
+            codeView.style.display = ''
+            if (iconCode) iconCode.style.display = 'none'
+            if (iconChart) iconChart.style.display = ''
+            btn.setAttribute('title', 'Show diagram')
+          } else {
+            renderView.style.display = ''
+            codeView.style.display = 'none'
+            if (iconCode) iconCode.style.display = ''
+            if (iconChart) iconChart.style.display = 'none'
+            btn.setAttribute('title', 'Show code')
+          }
+        })
+      })
+    }).catch(() => {})
+  }
 </script>

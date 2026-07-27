@@ -320,6 +320,45 @@
     font-size: 0.9em;
   }
 
+  .prose-custom .code-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .prose-custom .toggle-mermaid {
+    @apply p-1 rounded cursor-pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    background: transparent;
+    transition: color 0.3s, background-color 0.3s, transform 0.15s;
+  }
+
+  .prose-custom .toggle-mermaid:hover {
+    @apply text-[var(--text)] bg-[var(--inline-code-bg)];
+  }
+
+  .prose-custom .toggle-mermaid:active {
+    transform: scale(0.9);
+  }
+
+  .prose-custom .mermaid-render {
+    padding: 16px 10px;
+    overflow-x: auto;
+  }
+
+  .prose-custom .mermaid-render .mermaid {
+    display: block;
+    width: 100%;
+  }
+
+  .prose-custom .mermaid-render .mermaid svg {
+    width: 100%;
+    height: auto;
+  }
+
   .prose-custom :not(pre) > code,
   .prose-custom :not(.code-block) > code {
     background: var(--inline-code-bg);
