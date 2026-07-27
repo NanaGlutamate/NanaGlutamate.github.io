@@ -135,3 +135,7 @@ dist
 .notion_out
 public/raw
 public/favicon.png
+
+# Astro build cache
+.astro/*
+!.astro/types.d.ts
