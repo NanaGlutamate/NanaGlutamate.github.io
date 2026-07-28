@@ -518,6 +518,8 @@ def main():
         apply_sub_page_slugs(sp['blocks'], slug_map)
 
     # ── Build recursive sub_pages list for each top-level post ──
+    db_info = {pid: {'summary': pd['summary'], 'status': pd['status']} for pid, pd in posts_with_page_id}
+
     def collect_descendants(root_id, visited=None):
         if visited is None:
             visited = set()
@@ -528,7 +530,11 @@ def main():
             visited.add(child_id)
             title = slug_map.get(f'_{child_id}_title', 'Untitled')
             slug = slug_map[child_id]
-            result.append({'title': title, 'page_id': child_id, 'slug': slug})
+            info = {'title': title, 'page_id': child_id, 'slug': slug}
+            if child_id in db_info:
+                info['summary'] = db_info[child_id]['summary']
+                info['status'] = db_info[child_id]['status']
+            result.append(info)
             result.extend(collect_descendants(child_id, visited))
         return result
 

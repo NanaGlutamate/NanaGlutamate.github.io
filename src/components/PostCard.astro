@@ -9,41 +9,70 @@ export interface Props {
   tags: { name: string }[]
   summary?: string
   showSeries?: boolean
+  sub_pages?: { title: string; slug: string; summary?: string; status?: string }[]
 }
 
-const { slug, title, date, series, tags, summary, showSeries = true } = Astro.props
-
-const metaParts: string[] = []
-if (date) metaParts.push(formatDate(date))
-if (showSeries && series) metaParts.push(series)
-tags.slice(0, 4).forEach((tag) => metaParts.push(tag.name))
+const { slug, title, date, series, tags, summary, showSeries = true, sub_pages } = Astro.props
+const hasSubPages = sub_pages && sub_pages.length > 0
+const hasAnyMeta = !!(date || hasSubPages || (showSeries && series) || tags.length > 0)
+const hasAnyBeforeTags = !!(date || hasSubPages || (showSeries && series))
 ---
 
 <div class="post-card">
   <a href={`/posts/${slug}`} class="post-card-overlay" aria-label={title.trim()}></a>
   <h2 class="post-card-title">{title.trim()}</h2>
-  {metaParts.length > 0 && (
+
+  {hasAnyMeta && (
     <div class="post-card-meta">
-      {metaParts.map((part, i) => {
-        const isSeries = showSeries && series === part
-        return (
-          <>{i > 0 && <span class="post-card-meta-sep">·</span>}
-          {isSeries ? (
-            <a href={`/series/${series}`} class="post-card-series inline-flex items-center gap-1 hover:text-[var(--accent)] transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-              </svg>
-              {part}
-            </a>
-          ) : (
-            <span>{part}</span>
-          )}
-          </>
-        )
-      })}
+      {date && <span>{formatDate(date)}</span>}
+
+      {date && hasSubPages && <span class="post-card-meta-sep">·</span>}
+      {hasSubPages && (
+        <span class="post-card-subpages-wrap">
+          <button
+            class="post-card-subpages-toggle"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            {String(sub_pages!.length)}个相关页面
+          </button>
+          <div class="post-card-subpages-popup" role="menu">
+            {sub_pages!.map((sp) => (
+              <a
+                href={`/posts/${sp.slug}`}
+                class="post-card-subpages-item"
+                role="menuitem"
+                title={sp.title}
+              >
+                <span class="post-card-subpages-item-text">{sp.title}</span>
+                {sp.status && sp.status !== 'sub_page' && sp.summary && (
+                  <span class="post-card-subpages-item-summary">{sp.summary}</span>
+                )}
+              </a>
+            ))}
+          </div>
+        </span>
+      )}
+
+
+      {(date || hasSubPages) && showSeries && series && <span class="post-card-meta-sep">·</span>}
+      {showSeries && series && (
+        <a href={`/series/${series}`} class="post-card-series inline-flex items-center gap-1 hover:text-[var(--accent)] transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          {series}
+        </a>
+      )}
+
+      {hasAnyBeforeTags && tags.length > 0 && <span class="post-card-meta-sep">·</span>}
+      {tags.slice(0, 4).map((tag, i) => (
+        <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{tag.name}</span></>
+      ))}
     </div>
   )}
+
   {summary && (
     <p class="post-card-summary line-clamp-2">{summary}</p>
   )}

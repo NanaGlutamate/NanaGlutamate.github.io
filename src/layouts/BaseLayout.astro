@@ -29,5 +29,135 @@ const { title, description } = Astro.props
       <Navbar />
     </div>
     <slot />
+    <script is:inline>
+      (function () {
+        var SHOW_DELAY = 400
+        var HIDE_DELAY = 200
+        var MARQUEE_DURATION = 4
+
+        function openPopup(wrap) {
+          var popup = wrap.querySelector('.post-card-subpages-popup')
+          var toggle = wrap.querySelector('.post-card-subpages-toggle')
+          if (!popup.classList.contains('open')) {
+            popup.classList.add('open')
+            toggle.setAttribute('aria-expanded', 'true')
+            repositionPopup(wrap)
+          }
+        }
+
+        function closePopup(wrap) {
+          var popup = wrap.querySelector('.post-card-subpages-popup')
+          var toggle = wrap.querySelector('.post-card-subpages-toggle')
+          popup.classList.remove('open')
+          toggle.setAttribute('aria-expanded', 'false')
+        }
+
+        function repositionPopup(wrap) {
+          var popup = wrap.querySelector('.post-card-subpages-popup')
+          var rect = popup.getBoundingClientRect()
+          var vw = window.innerWidth
+          var shift = 0
+          if (rect.right > vw - 8) {
+            shift = rect.right - vw + 8
+          } else if (rect.left < 8) {
+            shift = rect.left - 8
+          }
+          popup.style.setProperty('--popup-shift', shift + 'px')
+          popup.style.transform = shift
+            ? 'translateX(calc(-50% - ' + shift + 'px))'
+            : 'translateX(-50%)'
+          popup.style.setProperty('--arrow-shift', (-shift) + 'px')
+        }
+
+        var wraps = document.querySelectorAll('.post-card-subpages-wrap')
+        wraps.forEach(function (wrap) {
+          var popup = wrap.querySelector('.post-card-subpages-popup')
+          var toggle = wrap.querySelector('.post-card-subpages-toggle')
+          var timer = null
+
+          wrap.addEventListener('mouseenter', function () {
+            if (timer) { clearTimeout(timer); timer = null }
+            timer = setTimeout(function () {
+              openPopup(wrap)
+              timer = null
+            }, SHOW_DELAY)
+          })
+
+          wrap.addEventListener('mouseleave', function () {
+            if (timer) { clearTimeout(timer); timer = null }
+            timer = setTimeout(function () {
+              closePopup(wrap)
+              timer = null
+            }, HIDE_DELAY)
+          })
+
+          toggle.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              if (popup.classList.contains('open')) {
+                closePopup(wrap)
+              } else {
+                openPopup(wrap)
+                var items = popup.querySelectorAll('.post-card-subpages-item')
+                if (items.length) { items[0].focus() }
+              }
+            }
+            if (e.key === 'Escape' && popup.classList.contains('open')) {
+              e.preventDefault()
+              closePopup(wrap)
+              toggle.focus()
+            }
+          })
+
+          popup.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              closePopup(wrap)
+              toggle.focus()
+            }
+          })
+
+          var items = popup.querySelectorAll('.post-card-subpages-item')
+          items.forEach(function (item) {
+            item.addEventListener('mouseenter', function () {
+              var text = item.querySelector('.post-card-subpages-item-text')
+              if (text && text.scrollWidth > text.clientWidth) {
+                text.style.setProperty('--scroll-offset', -(text.scrollWidth - text.clientWidth) + 'px')
+                text.classList.add('scrolling')
+              }
+            })
+            item.addEventListener('mouseleave', function () {
+              var text = item.querySelector('.post-card-subpages-item-text')
+              if (!text) return
+              if (text.classList.contains('scrolling')) {
+                var cs = getComputedStyle(text)
+                var m = new DOMMatrixReadOnly(cs.transform)
+                text.style.overflow = 'visible'
+                text.style.textOverflow = 'clip'
+                text.style.transition = 'none'
+                text.style.transform = 'translateX(' + m.m41 + 'px)'
+                text.classList.remove('scrolling')
+                text.offsetHeight
+                text.style.transition = ''
+                text.style.transform = ''
+                text.addEventListener('transitionend', function () {
+                  text.style.overflow = ''
+                  text.style.textOverflow = ''
+                }, { once: true })
+              }
+            })
+          })
+        })
+
+        window.addEventListener('resize', function () {
+          wraps.forEach(function (wrap) {
+            var popup = wrap.querySelector('.post-card-subpages-popup')
+            if (popup.classList.contains('open')) {
+              repositionPopup(wrap)
+            }
+          })
+        })
+      })()
+    </script>
   </body>
 </html>
