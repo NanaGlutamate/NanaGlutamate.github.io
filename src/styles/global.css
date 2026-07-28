@@ -243,15 +243,15 @@
     margin-bottom: 0.25rem;
   }
 
-  .prose-custom h1 + p,
-  .prose-custom h2 + p,
-  .prose-custom h3 + p,
-  .prose-custom h1 + ul,
-  .prose-custom h2 + ul,
-  .prose-custom h3 + ul,
-  .prose-custom h1 + ol,
-  .prose-custom h2 + ol,
-  .prose-custom h3 + ol {
+  .prose-custom h1+p,
+  .prose-custom h2+p,
+  .prose-custom h3+p,
+  .prose-custom h1+ul,
+  .prose-custom h2+ul,
+  .prose-custom h3+ul,
+  .prose-custom h1+ol,
+  .prose-custom h2+ol,
+  .prose-custom h3+ol {
     margin-top: 0.25rem;
   }
 
@@ -771,6 +771,20 @@
     line-height: 1.6;
   }
 
+  /* ── Inline sub-page link (dotted underline) ── */
+  .sub-page-link {
+    color: var(--text) !important;
+    text-decoration: underline dotted !important;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
+    cursor: pointer;
+    border-bottom: none !important;
+  }
+
+  .sub-page-link:hover {
+    color: var(--text-secondary) !important;
+  }
+
   /* ── Series list cards ── */
   .series-card {
     display: flex;
@@ -820,6 +834,7 @@ html {
   /* scrollbar-color 会继承给所有后代滚动容器 */
   scrollbar-color: var(--text-muted) transparent;
 }
+
 /* scrollbar-width 不继承，需要逐个滚动容器声明 */
 html,
 .prose-custom .code-body,

@@ -24,6 +24,16 @@ function renderKatex(expression: string, displayMode = true): string {
   }
 }
 
+function notionPageIdFromHref(href: string): string | null {
+  const m = href.match(/^\/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)/i)
+  return m ? m[1] : null
+}
+
+function subPageAnchor(pageId: string): string {
+  const stripped = pageId.replace(/-/g, '')
+  return `sub-page-${stripped.substring(0, 12)}`
+}
+
 function renderRichText(richText: any[]): string {
   if (!richText || richText.length === 0) return ''
   return richText.map((item) => {
@@ -35,16 +45,27 @@ function renderRichText(richText: any[]): string {
     if (ann.strikethrough) text = `<del>${text}</del>`
     if (ann.code) text = `<code>${text}</code>`
 
-    if (item.href) {
-      text = `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener noreferrer">${text}</a>`
-    }
-
     if (item.type === 'equation' && item.expression) {
       return renderKatex(item.expression, false)
     }
 
     if (item.type === 'mention' && item.mention_type === 'page') {
-      return `<span class="inline-flex items-center px-1.5 py-0.5 text-sm rounded bg-[var(--tag-bg)] text-[var(--tag-text)]">${text}</span>`
+      const slug = item.page_id || ''
+      if (slug) return `<a href="/posts/${escapeHtml(slug)}" class="sub-page-link">${text}</a>`
+    }
+
+    let href = item.href || ''
+    if (href && notionPageIdFromHref(href)) {
+      const stripped = notionPageIdFromHref(href)!
+      return `<a href="#${subPageAnchor(stripped)}" class="sub-page-link">${text}</a>`
+    }
+
+    if (href && href.startsWith('/posts/')) {
+      return `<a href="${escapeHtml(href)}" class="sub-page-link">${text}</a>`
+    }
+
+    if (href) {
+      text = `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`
     }
 
     return text
@@ -239,6 +260,13 @@ function blockToHtml(block: any): string {
       return ''
     case 'link_to_page':
       return ''
+    case 'child_page':
+      return ''
+    case 'sub_page_link': {
+      const subTitle = escapeHtml(block.title || 'Sub Page')
+      const subSlug = escapeHtml(block.slug || '')
+      return `<p><a href="/posts/${subSlug}" class="sub-page-link">${subTitle}</a></p>`
+    }
     default:
       return ''
   }

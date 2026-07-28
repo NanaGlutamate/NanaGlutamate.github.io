@@ -21,6 +21,7 @@ const posts = defineCollection({
     status: z.string(),
     summary: z.string(),
     blocks: z.array(z.any()),
+    sub_pages: z.array(z.object({ title: z.string(), page_id: z.string(), slug: z.string() })).optional(),
   }),
 })
 

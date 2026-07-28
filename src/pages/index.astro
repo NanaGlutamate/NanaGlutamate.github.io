@@ -5,7 +5,8 @@ import { getCollection } from 'astro:content'
 import { formatDate } from '../lib/date'
 
 const posts = await getCollection('posts')
-posts.sort((a, b) => {
+const visiblePosts = posts.filter((p) => p.data.status !== 'sub_page')
+visiblePosts.sort((a, b) => {
   const da = a.data.date || '0'
   const db = b.data.date || '0'
   return db.localeCompare(da)
@@ -21,14 +22,14 @@ posts.sort((a, b) => {
         <div class="max-w-[680px] mx-auto xl:mx-0">
           <h1 class="text-2xl font-bold mb-8 text-[var(--text)]" style="font-family: var(--font-sans)">最新文章</h1>
 
-          {posts.length === 0 ? (
+          {visiblePosts.length === 0 ? (
             <div class="text-center py-16 text-[var(--text-muted)]">
               <p class="text-lg mb-2">暂无文章</p>
               <p class="text-sm">运行 <code class="bg-[var(--code-bg)] px-1.5 py-0.5 rounded">npm run fetch</code> 来从 Notion 拉取文章</p>
             </div>
           ) : (
             <div>
-              {posts.map((post) => {
+              {visiblePosts.map((post) => {
                 const { slug, title, date, series, tags, summary } = post.data
                 const metaParts: string[] = []
                 if (date) metaParts.push(formatDate(date))
