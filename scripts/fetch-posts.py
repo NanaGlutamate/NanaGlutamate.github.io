@@ -6,17 +6,21 @@ from pathlib import Path
 PUBLISHED_STATUS = '发布'
 TEST_STATUS = '调试'
 
+ID = 'id'
+TYPE = 'type'
+CHILDREN = 'children'
+
 PROJECT_ROOT = Path(__file__).parent.parent
 PUBLIC_RAW = PROJECT_ROOT / 'public' / 'raw'
 NOTION_BACKUP = PROJECT_ROOT / 'NotionBackup'
-sys.path.insert(0, str(NOTION_BACKUP))
 
-_original_cwd = os.getcwd()
+sys.path.insert(0, str(NOTION_BACKUP))
+sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
+
+# notionapi.py reads config.json from cwd at import time
 os.chdir(str(NOTION_BACKUP))
-try:
-    from toolkit.notionlib3 import PageCache, ID, TYPE, CHILDREN, CHILD_PAGE, CHILD_DATABASE, DATA
-finally:
-    os.chdir(_original_cwd)
+from toolkit.notionlib3 import PageCache
+from page_refs import apply_sub_page_slugs, collect_sub_page_refs, collect_child_page_refs, _generate_slug
 
 
 def _load_env():
@@ -301,114 +305,6 @@ def get_page_name(cache, page_id):
         return 'Untitled'
 
 
-def collect_sub_page_refs(blocks):
-    refs = []
-    for block in blocks:
-        t = block.get('type', '')
-        if t in ('link_to_page', 'child_page'):
-            page_id = block.get('page_id', '')
-            if page_id:
-                title = block.get('title_hint', '')
-                refs.append({'title': title, 'page_id': page_id})
-        # Also scan rich_text for Notion page hrefs
-        rt = block.get('rich_text', [])
-        for item in rt:
-            href = item.get('href', '') or ''
-            pid = _extract_notion_page_id(href)
-            if pid:
-                refs.append({'title': '', 'page_id': pid})
-            if item.get('type') == 'mention' and item.get('mention_type') == 'page':
-                pid2 = item.get('page_id', '')
-                if pid2:
-                    refs.append({'title': '', 'page_id': pid2})
-        if 'children' in block:
-            refs.extend(collect_sub_page_refs(block['children']))
-    return refs
-
-
-def collect_child_page_refs(blocks):
-    refs = []
-    for block in blocks:
-        t = block.get('type', '')
-        if t == 'child_page':
-            page_id = block.get('page_id', '')
-            if page_id:
-                title = block.get('title_hint', '')
-                refs.append({'title': title, 'page_id': page_id})
-        if 'children' in block:
-            refs.extend(collect_child_page_refs(block['children']))
-    return refs
-
-
-def _extract_notion_page_id(href):
-    import re
-    m = re.match(r'^/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)', href, re.IGNORECASE)
-    if not m:
-        return None
-    raw = m.group(1)
-    return f'{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:]}'
-
-
-def _generate_slug(title, page_id, used_slugs):
-    import re
-    safe = title.strip() or 'untitled'
-    safe = re.sub(r'[^\w\u4e00-\u9fff-]', '-', safe)
-    safe = re.sub(r'-+', '-', safe).strip('-')
-    base = safe if safe else page_id.replace('-', '')[:12]
-    slug = base
-    n = 1
-    while slug in used_slugs:
-        slug = f'{base}-{n}'
-        n += 1
-    used_slugs.add(slug)
-    return slug
-
-
-def apply_sub_page_slugs(blocks, slug_map):
-    for block in blocks:
-        t = block.get('type', '')
-        if t == 'child_page':
-            page_id = block.get('page_id', '')
-            if page_id in slug_map:
-                block['type'] = 'sub_page_link'
-                block['slug'] = slug_map[page_id]
-                block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
-            else:
-                title_text = block.get('title_hint', '') or 'Untitled'
-                block['type'] = 'paragraph'
-                block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': '/unpublished'}]
-        elif t == 'link_to_page':
-            page_id = block.get('page_id', '')
-            if page_id in slug_map:
-                block['type'] = 'sub_page_link'
-                block['slug'] = slug_map.get(page_id, '')
-                block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
-            else:
-                title_text = block.get('title_hint', '') or 'Untitled'
-                block['type'] = 'paragraph'
-                block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': '/unpublished'}]
-        # Rewrite inline rich_text Notion hrefs
-        for item in block.get('rich_text', []):
-            href = item.get('href', '') or ''
-            pid = _extract_notion_page_id(href)
-            if pid:
-                if pid in slug_map:
-                    item['href'] = '/posts/' + slug_map.get(pid, '')
-                else:
-                    item['href'] = '/unpublished'
-            if item.get('type') == 'mention' and item.get('mention_type') == 'page':
-                pid2 = item.get('page_id', '')
-                if pid2:
-                    if pid2 in slug_map:
-                        item['page_id'] = slug_map.get(pid2, '')
-                    else:
-                        item['page_id'] = ''
-                        item['mention_type'] = ''
-                        item['href'] = '/unpublished'
-        if 'children' in block:
-            apply_sub_page_slugs(block['children'], slug_map)
-
-
 def main():
     os.chdir(str(NOTION_BACKUP))
     env = _load_env()
@@ -422,7 +318,7 @@ def main():
     cache = PageCache()
 
     db_entry = cache.assemble_page(db_id)
-    rows = db_entry.get(DATA, [])
+    rows = db_entry.get('data', [])
     log(f'Found {len(rows)} rows in database')
 
     posts = []
@@ -554,10 +450,6 @@ def main():
         child_refs = collect_sub_page_refs(info['blocks'])
         direct_children[page_id] = [r['page_id'] for r in child_refs if r['page_id'] in slug_map]
 
-    # ── Apply slug mapping to sub-page blocks ──
-    for sp in sub_page_posts:
-        apply_sub_page_slugs(sp['blocks'], slug_map)
-
     # ── Build recursive sub_pages list for each top-level post ──
     db_info = {pid: {'summary': pd['summary'], 'status': pd['status']} for pid, pd in posts_with_page_id}
 
@@ -579,7 +471,9 @@ def main():
             result.extend(collect_descendants(child_id, visited))
         return result
 
-    # ── Apply slug mapping to top-level posts ──
+    # ── Apply slug mapping to all blocks ──
+    for sp in sub_page_posts:
+        apply_sub_page_slugs(sp['blocks'], slug_map)
     for pid, post_data in posts_with_page_id:
         apply_sub_page_slugs(post_data['blocks'], slug_map)
         post_data['sub_pages'] = collect_descendants(pid)
