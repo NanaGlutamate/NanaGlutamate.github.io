@@ -37,7 +37,7 @@ function subPageAnchor(pageId: string): string {
 function renderRichText(richText: any[]): string {
   if (!richText || richText.length === 0) return ''
   return richText.map((item) => {
-    let text = escapeHtml(item.plain_text || '')
+    let text = escapeHtml(item.plain_text || '').replace(/\n/g, '<br>')
     const ann = item.annotations || {}
 
     if (ann.bold) text = `<strong>${text}</strong>`
