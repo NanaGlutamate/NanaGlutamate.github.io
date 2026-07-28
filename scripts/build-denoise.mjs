@@ -1,5 +1,7 @@
 import { execSync } from 'child_process'
 
+process.env.BLOG_INCLUDE_TEST = 'true'
+
 let out
 try {
   out = execSync('python scripts/download-avatar.py && astro build', {
