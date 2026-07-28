@@ -816,23 +816,14 @@
 
 html {
   scrollbar-gutter: stable;
+  color-scheme: light dark;
+  /* scrollbar-color 会继承给所有后代滚动容器 */
+  scrollbar-color: var(--text-muted) transparent;
 }
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+/* scrollbar-width 不继承，需要逐个滚动容器声明 */
+html,
+.prose-custom .code-body,
+.prose-custom .mermaid-render,
+.equation-scroll {
+  scrollbar-width: thin;
 }
