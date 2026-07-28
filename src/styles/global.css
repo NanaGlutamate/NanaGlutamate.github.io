@@ -209,7 +209,7 @@
     @apply text-[var(--text)] leading-relaxed;
     font-family: var(--font-sans);
     font-size: var(--fs-base);
-    line-height: 1.65;
+    line-height: 1.8;
   }
 
   .prose-custom h1,
