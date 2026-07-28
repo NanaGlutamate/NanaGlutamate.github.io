@@ -655,27 +655,37 @@
     line-height: 1.5;
     color: var(--text-secondary);
     border-left: 2px solid transparent;
-    transition: color 0.2s ease, border-color 0.2s ease;
+    transition: color 0.2s ease;
     text-decoration: none;
   }
 
   .left-sidebar .toc-link:hover {
     color: var(--accent);
-    border-left-color: var(--border);
   }
 
   .left-sidebar .toc-link.active {
     color: var(--accent);
-    border-left-color: var(--accent);
     font-weight: 500;
   }
 
   .left-sidebar .toc-links {
+    position: relative;
     scrollbar-width: none;
   }
 
   .left-sidebar .toc-links::-webkit-scrollbar {
     display: none;
+  }
+
+  .left-sidebar .toc-indicator {
+    position: absolute;
+    left: 0;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
   }
 
   .left-sidebar .toc-depth-0 {
