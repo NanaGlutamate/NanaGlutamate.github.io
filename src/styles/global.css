@@ -726,6 +726,7 @@
   /* ── Post list cards ── */
   .post-card {
     display: block;
+    position: relative;
     padding: 1.125rem 0;
     border-bottom: 1px solid var(--border-light);
     text-decoration: none;
@@ -735,7 +736,13 @@
     border-bottom: none;
   }
 
-  .post-card:hover .post-card-title {
+  .post-card-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .post-card-overlay:hover ~ .post-card-title {
     color: var(--accent);
   }
 
@@ -746,6 +753,11 @@
     color: var(--text);
     line-height: 1.4;
     transition: color 0.2s ease;
+  }
+
+  .post-card-series {
+    position: relative;
+    z-index: 1;
   }
 
   .post-card-meta {
