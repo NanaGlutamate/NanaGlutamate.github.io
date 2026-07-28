@@ -60,7 +60,7 @@ function renderRichText(richText: any[]): string {
       return `<a href="#${subPageAnchor(stripped)}" class="sub-page-link">${text}</a>`
     }
 
-    if (href && href.startsWith('/posts/')) {
+    if (href && href.startsWith('/')) {
       return `<a href="${escapeHtml(href)}" class="sub-page-link">${text}</a>`
     }
 

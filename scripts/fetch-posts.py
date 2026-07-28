@@ -326,6 +326,20 @@ def collect_sub_page_refs(blocks):
     return refs
 
 
+def collect_child_page_refs(blocks):
+    refs = []
+    for block in blocks:
+        t = block.get('type', '')
+        if t == 'child_page':
+            page_id = block.get('page_id', '')
+            if page_id:
+                title = block.get('title_hint', '')
+                refs.append({'title': title, 'page_id': page_id})
+        if 'children' in block:
+            refs.extend(collect_child_page_refs(block['children']))
+    return refs
+
+
 def _extract_notion_page_id(href):
     import re
     m = re.match(r'^/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)', href, re.IGNORECASE)
@@ -353,22 +367,44 @@ def _generate_slug(title, page_id, used_slugs):
 def apply_sub_page_slugs(blocks, slug_map):
     for block in blocks:
         t = block.get('type', '')
-        if t in ('link_to_page', 'child_page'):
+        if t == 'child_page':
             page_id = block.get('page_id', '')
             if page_id in slug_map:
                 block['type'] = 'sub_page_link'
                 block['slug'] = slug_map[page_id]
                 block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
+            else:
+                title_text = block.get('title_hint', '') or 'Untitled'
+                block['type'] = 'paragraph'
+                block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': '/unpublished'}]
+        elif t == 'link_to_page':
+            page_id = block.get('page_id', '')
+            if page_id in slug_map:
+                block['type'] = 'sub_page_link'
+                block['slug'] = slug_map.get(page_id, '')
+                block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
+            else:
+                title_text = block.get('title_hint', '') or 'Untitled'
+                block['type'] = 'paragraph'
+                block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': '/unpublished'}]
         # Rewrite inline rich_text Notion hrefs
         for item in block.get('rich_text', []):
             href = item.get('href', '') or ''
             pid = _extract_notion_page_id(href)
-            if pid and pid in slug_map:
-                item['href'] = '/posts/' + slug_map[pid]
+            if pid:
+                if pid in slug_map:
+                    item['href'] = '/posts/' + slug_map.get(pid, '')
+                else:
+                    item['href'] = '/unpublished'
             if item.get('type') == 'mention' and item.get('mention_type') == 'page':
                 pid2 = item.get('page_id', '')
-                if pid2 and pid2 in slug_map:
-                    item['page_id'] = slug_map[pid2]
+                if pid2:
+                    if pid2 in slug_map:
+                        item['page_id'] = slug_map.get(pid2, '')
+                    else:
+                        item['page_id'] = ''
+                        item['mention_type'] = ''
+                        item['href'] = '/unpublished'
         if 'children' in block:
             apply_sub_page_slugs(block['children'], slug_map)
 
@@ -438,12 +474,12 @@ def main():
         if refs:
             all_refs_by_parent[pid] = refs
 
-    # ── Recursively build sub-page registry ──
+    # ── Recursively build sub-page registry (only child_page sub-pages) ──
     visited = set()
     sub_page_registry = {}
     worklist = []
-    for refs in all_refs_by_parent.values():
-        for r in refs:
+    for pid, post_data in posts_with_page_id:
+        for r in collect_child_page_refs(post_data['blocks']):
             if r['page_id'] not in visited:
                 visited.add(r['page_id'])
                 worklist.append(r)
@@ -467,7 +503,7 @@ def main():
 
         sub_page_registry[page_id] = {'title': title, 'blocks': sub_blocks}
 
-        deeper_refs = collect_sub_page_refs(sub_blocks)
+        deeper_refs = collect_child_page_refs(sub_blocks)
         for dr in deeper_refs:
             if dr['page_id'] not in visited:
                 visited.add(dr['page_id'])
@@ -485,6 +521,11 @@ def main():
             slug = _generate_slug(info['title'], page_id, used_slugs)
         slug_map[page_id] = slug
         slug_map[f'_{page_id}_title'] = info['title']
+
+    for pid, pd in posts_with_page_id:
+        if pid not in slug_map:
+            slug_map[pid] = pd['slug']
+            slug_map[f'_{pid}_title'] = pd['title']
 
     # ── Generate sub-page post entries (skip pages already in DB) ──
     sub_page_posts = []
