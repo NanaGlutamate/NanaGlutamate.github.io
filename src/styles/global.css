@@ -261,13 +261,14 @@
 
   .prose-custom a {
     color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(20, 129, 184, 0.2);
-    transition: border-color 0.2s ease;
+    text-decoration: underline;
+    text-decoration-color: rgba(20, 129, 184, 0.2);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.2s ease;
   }
 
   .prose-custom a:hover {
-    border-bottom-color: var(--accent);
+    text-decoration-color: var(--accent);
   }
 
   .prose-custom blockquote {
