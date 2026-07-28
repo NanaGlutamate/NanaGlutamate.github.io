@@ -940,7 +940,7 @@
   }
 
   /* ── Inline sub-page link (dotted underline) ── */
-  .sub-page-link {
+  .in-site-link {
     color: var(--text) !important;
     text-decoration: underline dotted !important;
     text-underline-offset: 3px;
@@ -949,7 +949,7 @@
     border-bottom: none !important;
   }
 
-  .sub-page-link:hover {
+  .in-site-link:hover {
     color: var(--text-secondary) !important;
   }
 

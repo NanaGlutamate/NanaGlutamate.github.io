@@ -51,17 +51,17 @@ function renderRichText(richText: any[]): string {
 
     if (item.type === 'mention' && item.mention_type === 'page') {
       const slug = item.page_id || ''
-      if (slug) return `<a href="/posts/${escapeHtml(slug)}" class="sub-page-link">${text}</a>`
+      if (slug) return `<a href="/posts/${escapeHtml(slug)}" class="in-site-link">${text}</a>`
     }
 
     let href = item.href || ''
     if (href && notionPageIdFromHref(href)) {
       const stripped = notionPageIdFromHref(href)!
-      return `<a href="#${subPageAnchor(stripped)}" class="sub-page-link">${text}</a>`
+      return `<a href="#${subPageAnchor(stripped)}" class="in-site-link">${text}</a>`
     }
 
     if (href && href.startsWith('/')) {
-      return `<a href="${escapeHtml(href)}" class="sub-page-link">${text}</a>`
+      return `<a href="${escapeHtml(href)}" class="in-site-link">${text}</a>`
     }
 
     if (href) {
@@ -183,9 +183,11 @@ function blockToHtml(block: any): string {
         return `<video src="${src}" controls class="rounded-lg max-w-full my-4"></video>${caption}`
       }
       if (type === 'file' || type === 'pdf') {
-        const icon = type === 'pdf' ? '📄' : '📎'
-        const label = caption.replace(/<[^>]*>/g, '') || src.split('/').pop() || src
-        return `<div class="my-3"><a href="${src}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--callout-bg)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors">${icon} ${escapeHtml(label)}</a></div>`
+        const filename = src.split('/').pop() || src
+        const fileSvg = type === 'pdf'
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>'
+        return `<div class="my-3"><span class="inline-flex items-center gap-1.5">${fileSvg}<a href="${src}" target="_blank" rel="noopener noreferrer" download class="in-site-link">${escapeHtml(filename)}</a></span></div>`
       }
       const alt = caption.replace(/<[^>]*>/g, '') || 'image'
       return `<img src="${src}" alt="${escapeHtml(alt)}" loading="lazy" />${caption}`
@@ -265,7 +267,7 @@ function blockToHtml(block: any): string {
     case 'sub_page_link': {
       const subTitle = escapeHtml(block.title || 'Sub Page')
       const subSlug = escapeHtml(block.slug || '')
-      return `<p><a href="/posts/${subSlug}" class="sub-page-link">${subTitle}</a></p>`
+      return `<p><a href="/posts/${subSlug}" class="in-site-link">${subTitle}</a></p>`
     }
     default:
       return ''
