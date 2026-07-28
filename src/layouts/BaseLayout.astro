@@ -157,6 +157,22 @@ const { title, description } = Astro.props
             }
           })
         })
+
+        var scrollTicking = false
+        window.addEventListener('scroll', function () {
+          if (!scrollTicking) {
+            scrollTicking = true
+            requestAnimationFrame(function () {
+              wraps.forEach(function (wrap) {
+                var popup = wrap.querySelector('.post-card-subpages-popup')
+                if (popup.classList.contains('open')) {
+                  closePopup(wrap)
+                }
+              })
+              scrollTicking = false
+            })
+          }
+        }, { passive: true })
       })()
     </script>
   </body>
