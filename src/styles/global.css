@@ -544,14 +544,14 @@
       pointer-events: auto;
     }
 
-    .block-with-sidenote:has(.sidenote:hover) .sidenote-target-group {
+    .block-with-sidenote:has(> .sidenote:hover) > .sidenote-target-group {
       background: rgba(20, 129, 184, 0.05);
       border-radius: 4px;
       transition: background 0.15s ease;
     }
   }
 
-  .dark .block-with-sidenote:has(.sidenote:hover) .sidenote-target-group {
+  .dark .block-with-sidenote:has(> .sidenote:hover) > .sidenote-target-group {
     background: rgba(96, 165, 250, 0.06);
   }
 
