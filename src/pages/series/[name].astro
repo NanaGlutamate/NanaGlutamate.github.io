@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import LeftSidebar from '../../components/LeftSidebar.astro'
+import PostCard from '../../components/PostCard.astro'
 import { getCollection } from 'astro:content'
-import { formatDate } from '../../lib/date'
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts')
@@ -43,26 +43,9 @@ const posts = allPosts
           </div>
 
           <div>
-            {posts.map((post) => {
-              const metaParts: string[] = []
-              if (post.data.date) metaParts.push(formatDate(post.data.date, 'long'))
-              post.data.tags.slice(0, 4).forEach((tag: { name: string }) => metaParts.push(tag.name))
-              return (
-                <a href={`/posts/${post.data.slug}`} class="post-card">
-                  <h2 class="post-card-title">{post.data.title.trim()}</h2>
-                  {metaParts.length > 0 && (
-                    <div class="post-card-meta">
-                      {metaParts.map((part, i) => (
-                        <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{part}</span></>
-                      ))}
-                    </div>
-                  )}
-                  {post.data.summary && (
-                    <p class="post-card-summary line-clamp-2">{post.data.summary}</p>
-                  )}
-                </a>
-              )
-            })}
+            {posts.map((post) => (
+                <PostCard {...post.data} slug={post.data.slug} showSeries={false} />
+              ))}
           </div>
         </div>
       </div>

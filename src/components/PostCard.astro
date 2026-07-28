@@ -1,0 +1,34 @@
+---
+import { formatDate } from '../lib/date'
+
+export interface Props {
+  slug: string
+  title: string
+  date: string | null
+  series: string | null
+  tags: { name: string }[]
+  summary?: string
+  showSeries?: boolean
+}
+
+const { slug, title, date, series, tags, summary, showSeries = true } = Astro.props
+
+const metaParts: string[] = []
+if (date) metaParts.push(formatDate(date))
+if (showSeries && series) metaParts.push(series)
+tags.slice(0, 4).forEach((tag) => metaParts.push(tag.name))
+---
+
+<a href={`/posts/${slug}`} class="post-card">
+  <h2 class="post-card-title">{title.trim()}</h2>
+  {metaParts.length > 0 && (
+    <div class="post-card-meta">
+      {metaParts.map((part, i) => (
+        <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{part}</span></>
+      ))}
+    </div>
+  )}
+  {summary && (
+    <p class="post-card-summary line-clamp-2">{summary}</p>
+  )}
+</a>

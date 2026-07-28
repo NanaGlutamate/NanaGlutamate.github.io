@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import LeftSidebar from '../components/LeftSidebar.astro'
+import PostCard from '../components/PostCard.astro'
 import { getCollection } from 'astro:content'
-import { formatDate } from '../lib/date'
 
 const posts = await getCollection('posts')
 const visiblePosts = posts.filter((p) => p.data.status !== 'sub_page')
@@ -29,28 +29,9 @@ visiblePosts.sort((a, b) => {
             </div>
           ) : (
             <div>
-              {visiblePosts.map((post) => {
-                const { slug, title, date, series, tags, summary } = post.data
-                const metaParts: string[] = []
-                if (date) metaParts.push(formatDate(date))
-                if (series) metaParts.push(series)
-                tags.slice(0, 4).forEach((tag: { name: string }) => metaParts.push(tag.name))
-                return (
-                  <a href={`/posts/${slug}`} class="post-card">
-                    <h2 class="post-card-title">{title.trim()}</h2>
-                    {metaParts.length > 0 && (
-                      <div class="post-card-meta">
-                        {metaParts.map((part, i) => (
-                          <>{i > 0 && <span class="post-card-meta-sep">·</span>}<span>{part}</span></>
-                        ))}
-                      </div>
-                    )}
-                    {summary && (
-                      <p class="post-card-summary line-clamp-2">{summary}</p>
-                    )}
-                  </a>
-                )
-              })}
+              {visiblePosts.map((post) => (
+                  <PostCard {...post.data} slug={post.data.slug} />
+                ))}
             </div>
           )}
         </div>
