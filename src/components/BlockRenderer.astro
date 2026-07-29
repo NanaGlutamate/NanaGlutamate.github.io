@@ -25,7 +25,7 @@ function renderKatex(expression: string, displayMode = true): string {
 }
 
 function notionPageIdFromHref(href: string): string | null {
-  const m = href.match(/^\/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)/i)
+  const m = href.match(/^\/(?:p\/)?([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)/i)
   return m ? m[1] : null
 }
 

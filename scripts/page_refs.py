@@ -1,10 +1,13 @@
 import re
+import sys
 
 UNPUBLISHED_URL = '/unpublished'
 
+_RESOLVED_PREFIXES = ('/posts/', '/raw/', '/unpublished')
+
 
 def _extract_notion_page_id(href):
-    m = re.match(r'^/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)', href, re.IGNORECASE)
+    m = re.match(r'^(?:/p)?/([0-9a-f]{8}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{4}[0-9a-f]{12})(?:[#?]|$)', href, re.IGNORECASE)
     if not m:
         return None
     raw = m.group(1)
@@ -72,6 +75,8 @@ def _resolve_page_block(block, slug_map):
         block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
     else:
         title_text = block.get('title_hint', '') or 'Untitled'
+        if page_id:
+            print(f'ERROR: page_id not found in slug_map for link_to_page/child_page: page_id="{page_id}" title="{title_text}"', file=sys.stderr)
         block['type'] = 'paragraph'
         block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': UNPUBLISHED_URL}]
 
@@ -81,7 +86,12 @@ def _resolve_rich_text_ref(item, slug_map):
     href = item.get('href', '') or ''
     pid = _extract_notion_page_id(href)
     if pid:
-        item['href'] = '/posts/' + slug_map.get(pid, '') if pid in slug_map else UNPUBLISHED_URL
+        if pid in slug_map:
+            item['href'] = '/posts/' + slug_map[pid]
+        else:
+            item['href'] = UNPUBLISHED_URL
+    elif href and href.startswith('/') and not any(href.startswith(p) for p in _RESOLVED_PREFIXES):
+        print(f'ERROR: unrecognized internal link format in rich_text: href="{href}" text="{item.get("plain_text", "")}"', file=sys.stderr)
 
     if item.get('type') == 'mention' and item.get('mention_type') == 'page':
         pid2 = item.get('page_id', '')
