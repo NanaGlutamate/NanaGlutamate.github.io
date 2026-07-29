@@ -69,8 +69,13 @@ def simplify_rich_text(rich_text):
             entry['href'] = item.get('href')
         elif item.get('type') == 'mention':
             entry['mention_type'] = item.get('mention', {}).get('type', '')
+            entry['href'] = item.get('href')
             if entry['mention_type'] == 'page':
                 entry['page_id'] = item.get('mention', {}).get('page', {}).get('id', '')
+            elif entry['mention_type'] == 'link_mention':
+                link_data = item.get('mention', {}).get('link_mention', {})
+                entry['link_title'] = link_data.get('title', '')
+                entry['link_description'] = link_data.get('description', '')
         elif item.get('type') == 'equation':
             entry['expression'] = item.get('equation', {}).get('expression', '')
         result.append(entry)
@@ -219,6 +224,7 @@ def simplify_block(block, cache):
         simplified['title_hint'] = data.get('title', '')
 
     else:
+        print(f'ERROR: unhandled block type in simplify_block: "{block_type}"', file=sys.stderr)
         if CHILDREN in block:
             simplified['children'] = [simplify_block(c, cache) for c in block[CHILDREN]]
 
