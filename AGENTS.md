@@ -23,3 +23,9 @@ Notion API → NotionBackup (.notion-cache/) → assemble_page() → Astro 构�
 ```bash
 npm run build:denoise
 ```
+
+### 重构
+
+1. 先运行一次构建，将网站产物全部拉取下来保存到临时文件夹
+2. 执行重构
+3. 再跑一次构建，保存网站产物，对比重构前后文件差异

@@ -18,7 +18,7 @@ def collect_sub_page_refs(blocks):
     refs = []
     for block in blocks:
         t = block.get('type', '')
-        if t in ('link_to_page', 'child_page'):
+        if t in ('link_to_page', 'child_page', 'child_database'):
             page_id = block.get('page_id', '')
             if page_id:
                 title = block.get('title_hint', '')
@@ -75,8 +75,6 @@ def _resolve_page_block(block, slug_map):
         block['title'] = block.get('title_hint', '') or slug_map.get(f'_{page_id}_title', 'Untitled')
     else:
         title_text = block.get('title_hint', '') or 'Untitled'
-        if page_id:
-            print(f'ERROR: page_id not found in slug_map for link_to_page/child_page: page_id="{page_id}" title="{title_text}"', file=sys.stderr)
         block['type'] = 'paragraph'
         block['rich_text'] = [{'type': 'text', 'plain_text': title_text, 'annotations': {}, 'href': UNPUBLISHED_URL}]
 
@@ -104,10 +102,24 @@ def _resolve_rich_text_ref(item, slug_map):
                 item['href'] = UNPUBLISHED_URL
 
 
+def collect_child_database_refs(blocks):
+    refs = []
+    for block in blocks:
+        t = block.get('type', '')
+        if t == 'child_database':
+            page_id = block.get('page_id', '')
+            if page_id:
+                title = block.get('title_hint', '')
+                refs.append({'title': title, 'page_id': page_id})
+        if 'children' in block:
+            refs.extend(collect_child_database_refs(block['children']))
+    return refs
+
+
 def apply_sub_page_slugs(blocks, slug_map):
     for block in blocks:
         t = block.get('type', '')
-        if t in ('child_page', 'link_to_page'):
+        if t in ('child_page', 'link_to_page', 'child_database'):
             _resolve_page_block(block, slug_map)
         for item in block.get('rich_text', []):
             _resolve_rich_text_ref(item, slug_map)

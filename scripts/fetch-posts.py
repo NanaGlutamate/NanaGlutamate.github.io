@@ -20,7 +20,7 @@ sys.path.insert(0, str(PROJECT_ROOT / 'scripts'))
 # notionapi.py reads config.json from cwd at import time
 os.chdir(str(NOTION_BACKUP))
 from toolkit.notionlib3 import PageCache
-from page_refs import apply_sub_page_slugs, collect_sub_page_refs, collect_child_page_refs, _generate_slug
+from page_refs import apply_sub_page_slugs, collect_sub_page_refs, collect_child_page_refs, collect_child_database_refs, _generate_slug
 
 
 def _load_env():
@@ -223,6 +223,11 @@ def simplify_block(block, cache):
         data = block.get(block_type, {})
         simplified['title_hint'] = data.get('title', '')
 
+    elif block_type == 'child_database':
+        simplified['page_id'] = block[ID]
+        data = block.get(block_type, {})
+        simplified['title_hint'] = data.get('title', '')
+
     else:
         print(f'ERROR: unhandled block type in simplify_block: "{block_type}"', file=sys.stderr)
         if CHILDREN in block:
@@ -311,6 +316,104 @@ def get_page_name(cache, page_id):
         return 'Untitled'
 
 
+def _get_property_display_text(prop):
+    prop_type = prop.get('type', '')
+    if prop_type == 'title':
+        return get_plain_text(prop.get('title', []))
+    elif prop_type == 'rich_text':
+        return get_plain_text(prop.get('rich_text', []))
+    elif prop_type == 'select':
+        return prop.get('select', {}).get('name', '') if prop.get('select') else ''
+    elif prop_type == 'multi_select':
+        items = prop.get('multi_select', [])
+        return ', '.join(item.get('name', '') for item in items)
+    elif prop_type == 'status':
+        return prop.get('status', {}).get('name', '') if prop.get('status') else ''
+    elif prop_type == 'date':
+        d = prop.get('date', {})
+        if d:
+            return d.get('start', '')
+        return ''
+    elif prop_type == 'number':
+        val = prop.get('number')
+        return str(val) if val is not None else ''
+    elif prop_type == 'checkbox':
+        return '✓' if prop.get('checkbox') else '✗'
+    elif prop_type == 'url':
+        return prop.get('url', '')
+    elif prop_type == 'email':
+        return prop.get('email', '')
+    elif prop_type == 'phone_number':
+        return prop.get('phone_number', '')
+    elif prop_type == 'people':
+        people = prop.get('people', [])
+        return ', '.join(p.get('name', '') for p in people)
+    elif prop_type == 'files':
+        files = prop.get('files', [])
+        return ', '.join(f.get('name', '') for f in files)
+    elif prop_type == 'formula':
+        formula = prop.get('formula', {})
+        ftype = formula.get('type', '')
+        if ftype == 'string':
+            return formula.get('string', '')
+        elif ftype == 'number':
+            return str(formula.get('number', ''))
+        elif ftype == 'boolean':
+            return 'True' if formula.get('boolean') else 'False'
+        elif ftype == 'date':
+            d = formula.get('date', {})
+            return d.get('start', '') if d else ''
+        return ''
+    else:
+        return ''
+
+
+def build_database_blocks(db_entry):
+    rows = db_entry.get('data', [])
+    if not rows:
+        return []
+
+    columns = []
+    seen_columns = set()
+    for row in rows:
+        for prop_name in row.get('properties', {}).keys():
+            if prop_name not in seen_columns:
+                seen_columns.add(prop_name)
+                columns.append(prop_name)
+
+    header_cells = []
+    for col in columns:
+        header_cells.append([{'type': 'text', 'plain_text': col, 'annotations': {'bold': True}}])
+
+    data_rows = []
+    for row in rows:
+        props = row.get('properties', {})
+        row_cells = []
+        for col in columns:
+            prop = props.get(col, {})
+            cell_text = _get_property_display_text(prop)
+            row_cells.append([{'type': 'text', 'plain_text': cell_text, 'annotations': {}}])
+        data_rows.append({'type': 'table_row', 'cells': row_cells})
+
+    table_children = [{'type': 'table_row', 'cells': header_cells}] + data_rows
+    return [{
+        'type': 'table',
+        'table_width': len(columns),
+        'has_column_header': True,
+        'has_row_header': False,
+        'children': table_children,
+    }]
+
+
+def _enqueue_child_refs(blocks, visited, worklist):
+    for collector, kind in [(collect_child_page_refs, 'page'), (collect_child_database_refs, 'database')]:
+        for r in collector(blocks):
+            if r['page_id'] not in visited:
+                visited.add(r['page_id'])
+                r['kind'] = kind
+                worklist.append(r)
+
+
 def main():
     os.chdir(str(NOTION_BACKUP))
     env = _load_env()
@@ -376,15 +479,12 @@ def main():
         if refs:
             all_refs_by_parent[pid] = refs
 
-    # ── Recursively build sub-page registry (only child_page sub-pages) ──
+    # ── Recursively build sub-page registry (child_page and child_database) ──
     visited = set()
     sub_page_registry = {}
     worklist = []
     for pid, post_data in posts_with_page_id:
-        for r in collect_child_page_refs(post_data['blocks']):
-            if r['page_id'] not in visited:
-                visited.add(r['page_id'])
-                worklist.append(r)
+        _enqueue_child_refs(post_data['blocks'], visited, worklist)
 
     while worklist:
         ref = worklist.pop(0)
@@ -397,20 +497,19 @@ def main():
             continue
 
         try:
-            sub_page = cache.assemble_page(page_id)
-            sub_blocks = simplify_page_blocks(sub_page.get(CHILDREN, []), cache)
+            if ref.get('kind') == 'database':
+                db_entry = cache.assemble_page(page_id)
+                sub_blocks = build_database_blocks(db_entry)
+            else:
+                sub_page = cache.assemble_page(page_id)
+                sub_blocks = simplify_page_blocks(sub_page.get(CHILDREN, []), cache)
         except Exception as e:
-            log(f'  WARNING: failed to assemble sub-page {page_id}: {e}')
+            log(f'  WARNING: failed to assemble {ref.get("kind", "page")} {page_id}: {e}')
             sub_blocks = []
 
         sub_page_registry[page_id] = {'title': title, 'blocks': sub_blocks}
 
-        deeper_refs = collect_child_page_refs(sub_blocks)
-        for dr in deeper_refs:
-            if dr['page_id'] not in visited:
-                visited.add(dr['page_id'])
-                dr['title'] = dr['title'] or get_page_name(cache, dr['page_id'])
-                worklist.append(dr)
+        _enqueue_child_refs(sub_blocks, visited, worklist)
 
     # ── Generate slugs for all sub-pages ──
     used_slugs = set(pd['slug'] for _, pd in posts_with_page_id)
